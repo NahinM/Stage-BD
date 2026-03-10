@@ -34,6 +34,7 @@ please use two terminals. You can use git bash if facing any issue.
 
 ##### In terminal 1 ->
 <mark style="background-color: lightyellow;"> Make sure you are in client directory:-</mark>
+<br>check the current directory:
 ```
 pwd
 ```
@@ -43,6 +44,7 @@ npm run dev
 ```
 ##### In terminal 2 ->
 <mark style="background-color: lightyellow;"> Make sure you are in server directory:-</mark>
+<br>check the current directory:
 ```
 pwd
 ```
@@ -50,3 +52,6 @@ run the frontend/client with:
 ```
 npm run dev
 ```
+
+## !! PLEASE DO NOT WORK ON THE MAIN BRANCH !!
+please create your own branchs for your work and create a pull request after <mark style="background-color:red; color:yellow;">committing into your branch<makr>
