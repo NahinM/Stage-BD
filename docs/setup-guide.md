@@ -10,12 +10,12 @@ git clone https://github.com/NahinM/Stage-BD.git
 
 #### 2. install the packages
 
-go to frontend folder and install the packages (from the view directory of the project)
+go to frontend folder and install the packages (from the client directory of the project)
 after that,
 go to backend folder and install the packages (from the server directory of the project)
 
 ```
-cd view
+cd client
 npm i
 cd ..
 cd server
@@ -33,11 +33,11 @@ pwd
 please use two terminals. You can use git bash if facing any issue.
 
 ##### In terminal 1 ->
-<mark style="background-color: lightyellow;"> Make sure you are in view directory:-</mark>
+<mark style="background-color: lightyellow;"> Make sure you are in client directory:-</mark>
 ```
 pwd
 ```
-run the frontend/view with:
+run the frontend/client with:
 ```
 npm run dev
 ```
@@ -46,7 +46,7 @@ npm run dev
 ```
 pwd
 ```
-run the frontend/view with:
+run the frontend/client with:
 ```
 npm run dev
 ```
