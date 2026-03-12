@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
+import { Eye, EyeClosed } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,11 +30,10 @@ export default function SignIn() {
                 <h1 className="text-3xl font-semibold">Sign In to Your Account</h1>
                 <div className="p-2 space-y-4 mx-auto mt-8">
                     <Input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                    <div className="relative">
+                    <div className="flex items-center relative">
                         <Input type={hidePassword ? "password" : "text"} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                        <span className={"absolute right-0 top-0 text-center text-2xl px-1 cursor-pointer " + (hidePassword ? "text-green-700" : "text-red-700")} onClick={() => setHidePassword(!hidePassword)}>
-                            ✦
-                        </span>
+                        {!hidePassword && <Eye className="ml-2 cursor-pointer" onClick={() => setHidePassword(!hidePassword)} />}
+                        {hidePassword && <EyeClosed className="ml-2 cursor-pointer" onClick={() => setHidePassword(!hidePassword)} />}
                     </div>
                 </div>
                 <Button className="w-20 mx-auto bg-green-600 text-black hover:bg-green-800 hover:text-white mt-4" onClick={handleSignIn}>
