@@ -1,13 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
+import { app } from "./config/config.js";
+import './middlewares/middleware.js';
+import './routes/route.js';
 const port = process.env.PORT || 3000;
-
-app.use(cors());
-
-app.get('/api/hello', (req, res) => {
-  res.send({ message: 'Hello, World!' });
-});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
