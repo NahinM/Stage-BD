@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Link } from "react-router-dom"
 
 const eventData = [
     {
@@ -53,6 +54,9 @@ export default function EventFeed() {
                         </CardHeader>
                         <CardContent>
                             <CardDescription>{event.description}</CardDescription>
+                            <Link to={`/event/${event.id}`} className="text-blue-500 hover:underline p-2 mt-4 block text-lg">
+                                View Details
+                            </Link>
                         </CardContent>
                     </Card>
                 ))}
