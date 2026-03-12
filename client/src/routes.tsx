@@ -1,12 +1,12 @@
 import { createBrowserRouter } from "react-router-dom";
-import App from "./App.tsx";
 import PageNotFound from "./Pages/page-not-found.tsx";
 import SignIn from "./Pages/signin/signin.tsx";
+import Test from "./Pages/test/test-page.tsx";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <App />,
+    path: "/test",
+    element: <Test />
   },
   {
     path: "/signin",
