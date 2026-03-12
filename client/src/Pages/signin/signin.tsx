@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function SignIn() {
 
@@ -16,15 +17,16 @@ export default function SignIn() {
         };
         axios.post("/api/signin", data).then(response => {
             console.log(response.data);
+            toast.success("Sign-in successful!");
         }).catch(error => {
-            window.alert("Sign-in failed: " + (error.response?.data?.message || error.message));
+            toast.error("Sign-in failed: " + (error.response?.data?.message || error.message));
         });
     }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-muted/30">
             <div className="flex flex-col tems-center gap-4 rounded-lg border bg-background px-6 py-10 text-center shadow-sm">
-                <h1 className="text-3xl font-semibold">SignIn to Your Account</h1>
+                <h1 className="text-3xl font-semibold">Sign In to Your Account</h1>
                 <div className="p-2 space-y-4 mx-auto mt-8">
                     <Input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
                     <div className="relative">
