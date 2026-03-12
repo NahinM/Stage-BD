@@ -15,12 +15,12 @@ StageBD is a web platform designed for Bangladeshi cultural institutions and eve
 
 ## CSE470-Section19-Group01
 
-| SL  | Name               | ID       |
-| --- | ------------------ | -------- |
-| 1   | Nahin Munakr       | 23201183 |
-| 2   | Deedarul Alam Dipu | 23201180 |
-| 3   | Khondokar Toha     | 23201548 |
-| 4   | Adittya Kumar      | 22301518 |
+| SL  | Name                    | ID       |
+| --- | ----------------------- | -------- |
+| 1   | Nahin Munkar            | 23201183 |
+| 2   | S M Deedarul Alam       | 23201180 |
+| 3   | Kh. Toha Ibne Nazim     | 23201548 |
+| 4   | Adittya Kumar Chowdhury | 22301518 |
 ## Project Stack
 
 - React (frontend/view)
