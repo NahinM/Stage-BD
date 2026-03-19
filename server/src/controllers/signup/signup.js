@@ -15,12 +15,12 @@ const validate = (username, email, phone) => {
 }
 
 export const signUp = async ( req, res ) => {
-    const { username, password, email, phone, birthYear, gender } = req.body;
+    const { firstName, lastName, username, password, email, phone, birthYear, gender } = req.body;
     const validation = validate(username, email, phone);
     if (!validation.success) {
         return res.status(400).json({ error: validation.error });
     }
-    if (signupModel.addUser(username,password,email, phone, birthYear, gender)) {
+    if (signupModel.addUser( firstName, lastName, username, password, email, phone, birthYear, gender, req)) {
         const emailSent = await sendEmail(email, "Welcome to StageBD!", "Thank you for signing up for StageBD. We're excited to have you on board!");
         if (!emailSent) {
             res.status(400).json({ message: "Failed to send welcome email." });

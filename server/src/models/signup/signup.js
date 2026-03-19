@@ -21,13 +21,12 @@ export const validatePhone = (phone) => {
     return user ? user.phone : null;
 }
 
-export const addUser = (username, password, email, phone, birthYear, gender) => {
-    console.log("username: ", username);
-    console.log("password: ", password);
-    console.log("email: ", email);
-    console.log("phone: ", phone);
-    console.log("birthYear: ", birthYear);
-    console.log("gender: ", gender);
+export const addUser = ( firstName, lastName, username, password, email, phone, birthYear, gender, req) => {
+    if (!req.session.users) {
+        req.session.users = [];
+    }
+    req.session.users.push({ firstName, lastName, username, password, email, phone, birthYear, gender });
+    console.log(req.session.users);
     return true;
 }
 

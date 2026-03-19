@@ -4,12 +4,15 @@ import axios from "axios";
 import { Eye, EyeClosed } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { setUser } from "../../local-db/user";
+import { useNavigate } from "react-router-dom";
 
 export default function SignIn() {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [hidePassword, setHidePassword] = useState(true);
+    const navigate = useNavigate();
 
     const handleSignIn = () => {
         const data = {
@@ -19,6 +22,8 @@ export default function SignIn() {
         axios.post("/api/signin", data).then(response => {
             console.log(response.data);
             toast.success("Sign-in successful!");
+            setUser(response.data.user);
+            navigate("/");
         }).catch(error => {
             toast.error("Sign-in failed: " + (error.response?.data?.message || error.message));
         });
