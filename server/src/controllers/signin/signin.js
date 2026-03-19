@@ -1,4 +1,4 @@
-import * as signInModel from "../models/signin.js";
+import * as signInModel from "../../models/signin/signin.js";
 
 export const signIn = (req, res) => {
     const { username, password } = req.body;
