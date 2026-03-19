@@ -40,6 +40,7 @@ export default function SignUp() {
         axios.post("/api/signup", data).then(response => {
             toast.success(response.data.message);
         }).catch(error => {
+            console.error("Sign-up error:", error);
             toast.error("Sign-up failed: " + (error.response?.data?.message || error.message));
         });
     }
