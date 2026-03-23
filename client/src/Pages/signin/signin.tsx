@@ -15,16 +15,17 @@ export default function SignIn() {
     const navigate = useNavigate();
 
     const handleSignIn = () => {
-        const data = {
+        axios.post("/api/signin",{
             username: username,
             password: password
-        };
-        axios.post("/api/signin", data).then(response => {
+        })
+        .then(response => {
             console.log(response.data);
-            toast.success("Sign-in successful!");
+            toast.success(response.data.message);
             setUser(response.data.user);
             navigate("/");
-        }).catch(error => {
+        })
+        .catch(error => {
             toast.error("Sign-in failed: " + (error.response?.data?.message || error.message));
         });
     }

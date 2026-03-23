@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 
-import { zohoEmail, zohoAppPassword } from '../../config/config.js';
-
+import { zohoEmail, zohoAppPassword } from '../../config/env-variables.js';
 const transporter = nodemailer.createTransport({
   host: "smtp.zoho.com",
   port: 465,
