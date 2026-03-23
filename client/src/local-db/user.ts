@@ -1,10 +1,10 @@
-interface User {
-    firstName: string;
-    lastName: string;
+export interface User {
+    firstname: string;
+    lastname: string;
     username: string;
     email: string;
     phone: string;
-    birthYear: number
+    birthYear: number;
     gender: string;
 }
 

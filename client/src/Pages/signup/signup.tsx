@@ -6,8 +6,8 @@ import { toast } from "sonner";
 
 export default function SignUp() {
     const [data, setData] = useState({
-        firstName: "",
-        lastName: "",
+        firstname: "",
+        lastname: "",
         username: "",
         password: "",
         confirmPassword: "",
@@ -42,8 +42,8 @@ export default function SignUp() {
         axios.post("/api/signup", data).then(response => {
             toast.success(response.data.message);
         }).catch(error => {
-            console.error("Sign-up error:", error);
-            toast.error("Sign-up failed: " + (error.response?.data?.message || error.message));
+            console.error("Sign-up error:", error, error.response?.data?.error);
+            toast.error("Sign-up failed: " + (error.response?.data?.error || "An error occurred"));
         });
     }
 
@@ -54,11 +54,11 @@ export default function SignUp() {
                 <div className="p-2 space-y-4 mx-auto mt-8 flex flex-col">
                     <div>
                         <h2 className="text-left">First Name:</h2>
-                        <Input id="firstName" type="text" name="firstName" placeholder="First Name" value={data.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
+                        <Input id="firstName" type="text" name="firstName" placeholder="First Name" value={data.firstname} onChange={(e) => handleChange("firstname", e.target.value)} />
                     </div>
                     <div>
                         <h2 className="text-left">Last Name:</h2>
-                        <Input id="lastName" type="text" name="lastName" placeholder="Last Name" value={data.lastName} onChange={(e) => handleChange("lastName", e.target.value)} />
+                        <Input id="lastName" type="text" name="lastName" placeholder="Last Name" value={data.lastname} onChange={(e) => handleChange("lastname", e.target.value)} />
                     </div>
                     <div>
                         <h2 className="text-left">Username:</h2>
