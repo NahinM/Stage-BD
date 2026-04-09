@@ -7,21 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
-export interface EventCardType {
-    id: string,
-    title: string,
-    description: string,
-    type: string,
-    is_free: boolean,
-    category: string,
-}
+import type { EventCardType } from "./event-card-type"
 
 export function EventCard({Item}: {Item: EventCardType}) {
     return (
-        <Card className="max-w-md p-0 overflow-visible">
+        <Card className="max-w-md p-0 overflow-visible shadow-md shadow-gray-500 hover:shadow-xl transition-shadow duration-300 h-110 mt-10">
             <CardHeader className="p-0 relative mb-5">
-                <div className="w-full min-h-50 rounded bg-gray-200"></div>
+                <div className="w-full h-50 rounded bg-gray-200"></div>
                 <div className="absolute top-0 left-0 bg-white/80 rounded-md py-1 px-3 transform -translate-y-full font-bold border border-gray-500">
                     {Item.is_free ? "Free" : "Paid"}
                 </div>
