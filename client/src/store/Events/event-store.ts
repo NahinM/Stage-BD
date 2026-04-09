@@ -9,16 +9,7 @@ interface EventStore {
 }
 
 export const useEventStore = create<EventStore>((set) => ({
-    events: [
-        {
-            id: "1",
-            title: "Tech Conference 2024",
-            description: "Join us for a day of tech talks and networking.",
-            type: "Conference",
-            is_free: false,
-            category: "Technology",
-        }
-    ] as EventCardType[],
+    events: [] as EventCardType[],
     is_fetching: false,
     fetchEvents: () => {
         set({ is_fetching: true });

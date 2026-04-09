@@ -1,9 +1,14 @@
 import { useEventStore } from "@/store/Events/event-store";
 import { EventCard } from "./event-card"
 import {type EventCardType} from "./event-card-type"
+import { useEffect } from "react";
 
 export default function EventFeed() {
     const events = useEventStore((state) => state.events);
+
+    useEffect(() => {
+        useEventStore.getState().fetchEvents();
+    },[])
 
     return (
         <div className="bg-muted min-h-screen p-4 w-full">
