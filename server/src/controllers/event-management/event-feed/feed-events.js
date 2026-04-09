@@ -1,22 +1,10 @@
-const events = [
-    {
-        id: "1",
-        title: "Tech Conference 2024",
-        description: "Join us for a day of tech talks and networking.",
-        type: "Conference",
-        is_free: false,
-        category: "Technology",
-    },
-    {
-        id: "2",
-        title: "Tech Conference 2024",
-        description: "Join us for a day of tech talks and networking.",
-        type: "Conference",
-        is_free: false,
-        category: "Technology",
-    }
-]
+import { db_getEvents } from "../../../models/event-management/event-feed/event-feed.js";
 
 export const getEvents = async (req, res) => {
-    res.send(events);
+    try {
+        const events = await db_getEvents();
+        res.json(events);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 }

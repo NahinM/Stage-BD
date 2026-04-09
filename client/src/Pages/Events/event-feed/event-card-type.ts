@@ -2,7 +2,7 @@ export interface EventCardType {
     id: string,
     title: string,
     description: string,
-    type: string,
+    type: string | null,
     is_free: boolean,
-    category: string,
+    category_id: number,
 }

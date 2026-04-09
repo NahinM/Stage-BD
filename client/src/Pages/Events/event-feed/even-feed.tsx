@@ -7,7 +7,9 @@ export default function EventFeed() {
     const events = useEventStore((state) => state.events);
 
     useEffect(() => {
-        useEventStore.getState().fetchEvents();
+        if (events.length === 0) {
+            useEventStore.getState().fetchEvents();
+        }
     },[])
 
     return (

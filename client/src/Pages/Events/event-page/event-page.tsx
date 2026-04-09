@@ -32,10 +32,17 @@ export default function EventPage() {
                     <p>Status: {detail.status}</p>
                     <p>Created At: {detail.created_at}</p>
                     <h3>Venue</h3>
-                    <p>Name: {detail.venue.name}</p>
-                    <p>Address: {detail.venue.address}</p>
-                    <p>City: {detail.venue.city}</p>
-                    <p>Capacity: {detail.venue.capacity}</p>
+
+                    {detail.venue ? (
+                        <div>
+                            <p>Name: {detail.venue.name}</p>
+                            <p>Address: {detail.venue.address}</p>
+                            <p>City: {detail.venue.city}</p>
+                            <p>Capacity: {detail.venue.capacity}</p>
+                        </div>
+                    ) : (
+                        <p>No venue information available.</p>
+                    )}
                 </div>
             )}
         </div>

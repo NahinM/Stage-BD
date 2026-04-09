@@ -15,7 +15,7 @@ export interface EventDetails {
     price: number;
     status: string;
     created_at: string;
-    venue: Venue;
+    venue: Venue | null;
 }
 
 interface Venue {
