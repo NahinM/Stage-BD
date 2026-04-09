@@ -11,9 +11,10 @@ app.post('/api/reservation/reserve', controller.reservationController.reserveTic
 app.get('/api/reservation/my', controller.reservationController.getMyReservations);
 app.patch('/api/reservation/cancel/:reservationId', controller.reservationController.cancelMyReservation);
 
-
-
-app.get("/db-test", async (req, res) => {
+app.post('/api/checkin/scan', controller.checkinController.scanGuestCheckin);
+app.get('/api/checkin/event/:eventId', controller.checkinController.getEventCheckins);
+app.get('/api/checkin/search/:eventId', controller.checkinController.searchEventGuests);
+app.post('/api/checkin/manual', controller.checkinController.manualCheckinByReservation);app.get("/db-test", async (req, res) => {
   const { supabase } = await import("../config/database.js");
 
   const { data, error } = await supabase
