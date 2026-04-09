@@ -4,4 +4,4 @@ import { eventController } from "../../controllers/controller.js";
 app.get("/api/events", eventController.feed.getEvents);
 app.get("/api/events/:id", eventController.page.getEventDetails);
 app.get("/api/categories", eventController.category.getEventCategories);
-app.get("/api/search", eventController.search.searchEvents);
+app.post("/api/searchevents", eventController.search.searchEvents);

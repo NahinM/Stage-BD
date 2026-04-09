@@ -11,18 +11,20 @@ import {
 import { useCategoryStore } from "@/store/category"
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import { setEvents, fetchEvents, events } from "@/store/Events/event-store.ts";
 
 export default function EventSearchBox() {
     const { categories } = useCategoryStore();
-    const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
-    const [selectedPaidFilter, setSelectedPaidFilter] = useState<string>("Paid/Free");
+    const [selectedCategory, setSelectedCategory] = useState<number>(-1);
+    const [selectedPaidFilter, setSelectedPaidFilter] = useState<boolean | null>(null);
     const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("All Type");
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchBy, setSearchBy] = useState<string>("title");
-    const queryData = useRef<{search: {searchby: string, query: string}, filter: {category: string, paid: string, type: string}}>({
+    const queryData = useRef<{search: {searchby: string, query: string}, filter: {category: number, paid: boolean | null, type: string}}>({
         search: {searchby: "title", query: ""
         },
-        filter: {category: "All Categories", paid: "Paid/Free", type: "All Type"}
+        filter: {category: -1, paid: null, type: "All Type"}
     });
 
     const fetchCategories = () => {
@@ -32,12 +34,23 @@ export default function EventSearchBox() {
     };
 
     useEffect(() => {
+        if(selectedCategory === -1 && selectedPaidFilter === null && selectedTypeFilter === "All Type" && searchQuery.trim() === "") {
+            if(events.length === 0) {
+                fetchEvents();
+            }
+            return;
+        }
         queryData.current.search.searchby = searchBy;
         queryData.current.search.query = searchQuery;
         queryData.current.filter.category = selectedCategory;
         queryData.current.filter.type = selectedTypeFilter;
         queryData.current.filter.paid = selectedPaidFilter;
-        
+        axios.post("/api/searchevents", queryData.current).then(response => {
+            setEvents(response.data);
+            console.log("Search results:", response.data);
+        }).catch(error => {
+            console.error("Search error:", error);
+        });
     }, [searchBy, searchQuery, selectedCategory, selectedPaidFilter, selectedTypeFilter]);
 
     return (
@@ -74,18 +87,18 @@ export default function EventSearchBox() {
             </div>
             <div>
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center px-3 py-1 rounded-md shadow-md shadow-gray-600 bg-white" onClick={fetchCategories}>{selectedCategory} <ChevronDown /></DropdownMenuTrigger>
+                    <DropdownMenuTrigger className="flex items-center px-3 py-1 rounded-md shadow-md shadow-gray-600 bg-white" onClick={fetchCategories}>{categories.find(c => c.id === selectedCategory)?.name || "All Categories"} <ChevronDown /></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
                         <DropdownMenuGroup>
                         <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setSelectedCategory("All Categories")}>
+                        <DropdownMenuItem onClick={() => setSelectedCategory(-1)}>
                             All Categories
                         </DropdownMenuItem>
                             {
                                 categories.map((category) => (
-                                    <DropdownMenuItem key={category.id} onClick={() => setSelectedCategory(category.name)}>
-                                        {category.name}
+                                    <DropdownMenuItem key={category.id} onClick={() => setSelectedCategory(category.id)}>
+                                        {(category.id===-1 ? "All Categories" : category.name)}
                                     </DropdownMenuItem>
                                 ))
                             }
@@ -95,19 +108,19 @@ export default function EventSearchBox() {
             </div>
             <div>
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center px-3 py-1 rounded-md shadow-md shadow-gray-600 bg-white" onClick={fetchCategories}>{selectedPaidFilter} <ChevronDown /></DropdownMenuTrigger>
+                    <DropdownMenuTrigger className="flex items-center px-3 py-1 rounded-md shadow-md shadow-gray-600 bg-white" onClick={fetchCategories}>{selectedPaidFilter === true ? "Paid" : selectedPaidFilter === false ? "Free" : "Paid/Free"} <ChevronDown /></DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
                         <DropdownMenuGroup>
                         <DropdownMenuLabel>Filter by paid/free</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                             {
                                 [
-                                    "Paid",
-                                    "Free",
-                                    "Paid/Free"
-                                ].map((filter) => (
-                                    <DropdownMenuItem key={filter} onClick={() => setSelectedPaidFilter(filter)}>
-                                        {filter}
+                                    true,
+                                    false,
+                                    null
+                                ].map((filter,index) => (
+                                    <DropdownMenuItem key={index} onClick={() => setSelectedPaidFilter(filter)}>
+                                        {filter === true ? "Paid" : filter === false ? "Free" : "Paid/Free"}
                                     </DropdownMenuItem>
                                 ))
                             }

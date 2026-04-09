@@ -6,6 +6,7 @@ import type { EventDetails } from "./event-detail-type";
 export default function EventPage() {
     const { id } = useParams();
     const [detail, setDetail] = useState<EventDetails | null>(null);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -29,6 +30,17 @@ export default function EventPage() {
     const formatMoney = (value: number) => `$${value.toFixed(2)}`;
     const isSoldOut = detail.seat_limit > 0 && detail.seats_reserved >= detail.seat_limit;
     const seatsLeft = Math.max(detail.seat_limit - detail.seats_reserved, 0);
+    const shareLink = `http://localhost:5173/event/${detail.id}`;
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(shareLink);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1800);
+        } catch {
+            setCopied(false);
+        }
+    };
 
     return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#f8fafc_0%,_#e2e8f0_45%,_#cbd5e1_100%)] px-4 py-10 sm:px-6 lg:px-8">
@@ -48,6 +60,22 @@ export default function EventPage() {
                         <span className="rounded-full border border-slate-500/50 bg-slate-700/60 px-3 py-1 font-medium">
                             {detail.type}
                         </span>
+                    </div>
+                    <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-700/70 bg-slate-800/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sharing Link</p>
+                            <p className="mt-2 break-all text-sm text-slate-100">{shareLink}</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleCopyLink}
+                            className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-slate-800"
+                        >
+                            {copied ? "Copied" : "Copy link"}
+                        </button>
+                    </div>
+                    <div className="mt-3 text-xs text-slate-400">
+                        {copied ? "Link copied to clipboard." : "Click the button to copy the link."}
                     </div>
                 </div>
 

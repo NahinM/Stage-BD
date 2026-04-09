@@ -6,6 +6,7 @@ interface EventStore {
     events: EventCardType[];
     is_fetching: boolean;
     fetchEvents: () => void;
+    setEvents: (events: EventCardType[]) => void;
 }
 
 export const useEventStore = create<EventStore>((set) => ({
@@ -21,5 +22,14 @@ export const useEventStore = create<EventStore>((set) => ({
                 console.error("Failed to fetch events:", error);
                 set({ is_fetching: false });
             });
+    },
+    setEvents: (events: EventCardType[]) => {
+        set({ events: events, is_fetching: false });
     }
 }));
+
+const fetchEvents = useEventStore.getState().fetchEvents;
+const setEvents = useEventStore.getState().setEvents;
+const events = useEventStore.getState().events;
+
+export { fetchEvents, setEvents, events };
