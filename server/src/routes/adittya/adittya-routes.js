@@ -1,3 +1,4 @@
+import { app } from '../../config/config.js'
 /* Adittya artist feature routes */
 app.get("/api/adittya/artists", controller.adittyaArtistController.getArtists);
 app.get("/api/adittya/artists/:username", controller.adittyaArtistController.getArtistDetails);
