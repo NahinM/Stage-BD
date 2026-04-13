@@ -7,7 +7,8 @@ const validate = async (username, password) => {
         return { success: false, error: "Invalid username or password" };
     }
 
-    const isMatch = await verifyPassword(`${password}`, `${hashedPassword}`);
+    // const isMatch = await verifyPassword(`${password}`, `${hashedPassword}`);
+    const isMatch = `${password}` === `${hashedPassword}`;
     if (!isMatch) {
         return { success: false, error: "Invalid password" };
     }
@@ -17,7 +18,6 @@ const validate = async (username, password) => {
 
 export const signIn = async (req, res) => {
     const { username, password } = req.body;
-
     try {
         const validation = await validate(username, password);
 
@@ -26,6 +26,8 @@ export const signIn = async (req, res) => {
         }
 
         const userDetail = await signInModel.getUserDetail(username);
+        const userRoles = await signInModel.getUserRoles(userDetail.id);
+        userDetail.roles = userRoles;
         return res.send({ message: "Sign-in successful!", user: userDetail });
     } catch (error) {
         console.error("Sign-in failed:", error);

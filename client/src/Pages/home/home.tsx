@@ -1,12 +1,8 @@
-import { getUser, type User } from "@/local-db/user";
-
 export default function Home() {
-    const user:User | null = getUser();
-    console.log("User in Home component: ", user);
 
     return (
-        <>
-        <h1>Welcome to the Home Page {user?.firstname}</h1>
-        </>
-    )
+        <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 p-6">
+            <h1>Welcome to the Home Page</h1>
+        </div>
+    );
 }
