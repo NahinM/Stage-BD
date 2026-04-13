@@ -1,61 +1,29 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-
-const eventData = [
-    {
-        id: 1,
-        title: "Event 1",
-        description: "This is the first event.",
-    },
-    {
-        id: 2,
-        title: "Event 2",
-        description: "This is the second event.",
-    },
-    {
-        id: 3,
-        title: "Event 3",
-        description: "This is the third event.",
-    },
-    {
-        id: 4,
-        title: "Event 4",
-        description: "This is the fourth event.",
-    },
-    {
-        id: 5,
-        title: "Event 5",
-        description: "This is the fifth event.",
-    }
-]
+import { useEventStore } from "@/store/Events/event-store";
+import { EventCard } from "./event-card"
+import {type EventCardType} from "./event-card-type"
+import { useEffect } from "react";
+import EventSearchBox from "./search";
 
 export default function EventFeed() {
+    const events = useEventStore((state) => state.events);
+
+    useEffect(() => {
+        if (events.length === 0) {
+            useEventStore.getState().fetchEvents();
+        }
+    },[])
+
     return (
-        <div className="bg-muted/30 min-h-screen p-2">
-            <h1 className="text-3xl font-semibold">Event Feed</h1>
-            <p className="text-lg text-center text-muted-foreground">This is where the event feed will be displayed.</p>
-            <div className="flex flex-row flex-wrap gap-4 p-4">
-                {eventData.map((event) => (
-                    <Card 
-                    key={event.id}
-                    className="w-[300px] min-h-[300px] border bg-background shadow-xl hover:shadow-gray-800 hover:translate-y-[-10px] transition-all duration-300 p-0 pb-4 cursor-pointer"
-                    >
-                        <div className="mt-0 w-full top-0 min-h-[200px] flex items-center justify-center bg-gray-200 text-gray-500">
-                            image
-                        </div>
-                        <CardHeader>
-                            <CardTitle>{event.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <CardDescription>{event.description}</CardDescription>
-                        </CardContent>
-                    </Card>
-                ))}
+        <div className="bg-muted min-h-screen p-4 w-full">
+            <h1 className="text-2xl font-bold mb-4 text-center">Event Feed</h1>
+
+            <EventSearchBox />
+            <div className="flex flex-wrap gap-8 min-h-screen">
+                {
+                    events.map((event: EventCardType) => (
+                        <EventCard key={event.id} Item={event} />
+                    ))
+                }
             </div>
         </div>
     )
