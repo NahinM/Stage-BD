@@ -5,7 +5,7 @@ import {
   getEventCheckins as getEventCheckinsModel,
   searchEventGuests as searchEventGuestsModel,
   getReservationById,
-} from "../../models/checkin/index.js";
+} from "../../../models/Reservation&Checkin/checkin/index.js";
 
 export const scanGuestCheckin = async (req, res) => {
   try {

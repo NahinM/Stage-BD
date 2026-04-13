@@ -1,4 +1,4 @@
-import { supabase } from "../../config/database.js";
+import { supabase } from "../../../config/database.js";
 
 export const getReservationByCode = async (code) => {
   const { data, error } = await supabase

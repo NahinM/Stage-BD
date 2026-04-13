@@ -8,7 +8,7 @@ import {
   incrementSeatsReserved,
   getUserReservations,
   cancelReservation,
-} from "../../models/reservation/index.js";
+} from "../../../models/Reservation&Checkin/reservation/index.js";
 
 import { nanoid } from "nanoid";
 

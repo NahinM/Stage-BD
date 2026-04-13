@@ -5,11 +5,11 @@ import SignUp from "./Pages/signup/signup.tsx";
 import Test from "./Pages/test/test-page.tsx";
 import EventFeed from "./Pages/Events/event-feed/even-feed.tsx";
 import Home from "./Pages/home/home.tsx";
-import ReservationPage from "./Pages/reservation/ReservationPage.tsx";
-import ReservationSuccess from "./Pages/reservation/ReservationSuccess.tsx";
-import MyReservations from "./Pages/my-reservations/MyReservations.tsx";
-import CheckinDashboard from "./Pages/checkin/CheckinDashboard.tsx";
-import ScannerPage from "./Pages/checkin/ScannerPage.tsx";
+import ReservationPage from "./Pages/Reservation&Checkin/reservation/ReservationPage.tsx";
+import ReservationSuccess from "./Pages/Reservation&Checkin/reservation/ReservationSuccess.tsx";
+import MyReservations from "./Pages/Reservation&Checkin/my-reservations/MyReservations.tsx";
+import CheckinDashboard from "./Pages/Reservation&Checkin/checkin/CheckinDashboard.tsx";
+import ScannerPage from "./Pages/Reservation&Checkin/checkin/ScannerPage.tsx";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -34,27 +34,25 @@ export const router = createBrowserRouter([
   {
     path: "*",
     element: <PageNotFound />,
-
   },
   {
-        path: "/reserve/:eventId",
-        element: <ReservationPage />,
-    },
-    {
-        path: "/reservation/success/:code",
-        element: <ReservationSuccess />,
-    },
-  {
-        path: "/my-reservations",
-        element: <MyReservations />,
+    path: "/reserve/:eventId",
+    element: <ReservationPage />,
   },
   {
-      path: "/checkin",
-      element: <CheckinDashboard />,
+    path: "/reservation/success/:code",
+    element: <ReservationSuccess />,
+  },
+  {
+    path: "/my-reservations",
+    element: <MyReservations />,
+  },
+  {
+    path: "/checkin",
+    element: <CheckinDashboard />,
   },
   {
     path: "/scanner",
     element: <ScannerPage />,
   },
-
 ])
