@@ -18,7 +18,19 @@ export const getHashedPassword = async (username) => {
 export const getUserDetail = async (username) => {
     const { data, error } = await supabase
         .from("user")
-        .select("username,firstname,lastname,email,phone,birthYear,gender")
+        .select(`
+            id,
+            username,
+            email,
+            firstname,
+            lastname,
+            phone,
+            birthyear,
+            gender,
+            city,
+            bio,
+            is_verified
+        `)
         .eq('username', `${username}`)
         .single();
 
@@ -28,4 +40,20 @@ export const getUserDetail = async (username) => {
     }
 
     return data;
+};
+
+export const getUserRoles = async (userId) => {
+    const { data, error } = await supabase
+        .from("user_role")
+        .select("role")
+        .eq('user_id', `${userId}`);
+
+    if (error) {
+        console.error("Error fetching user roles:", error);
+        return [];
+    }
+    if (data.length === 0) {
+        return [];
+    }
+    return data.map(item => item.role);
 };

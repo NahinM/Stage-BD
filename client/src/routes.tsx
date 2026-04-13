@@ -12,10 +12,15 @@ import ReservationSuccess from "./Pages/Reservation&Checkin/reservation/Reservat
 import MyReservations from "./Pages/Reservation&Checkin/my-reservations/MyReservations.tsx";
 import CheckinDashboard from "./Pages/Reservation&Checkin/checkin/CheckinDashboard.tsx";
 import ScannerPage from "./Pages/Reservation&Checkin/checkin/ScannerPage.tsx";
+import Profile from "./Pages/User/profile.tsx";
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />
+  },
+  {
+    path: "/profile",
+    element: <Profile />
   },
   {
     path: "/test",
