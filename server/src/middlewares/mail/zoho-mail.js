@@ -27,7 +27,7 @@ export const sendEmail = async (to, subject, text) => {
   
   if(true){
     console.log('email sending is disabled for testing purposes');
-    return false;
+    return true;
   }
 
   try {

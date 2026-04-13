@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 export default function SignUp() {
     const [data, setData] = useState({
+        firstname: "",
+        lastname: "",
         username: "",
         password: "",
         confirmPassword: "",
@@ -40,8 +42,8 @@ export default function SignUp() {
         axios.post("/api/signup", data).then(response => {
             toast.success(response.data.message);
         }).catch(error => {
-            console.error("Sign-up error:", error);
-            toast.error("Sign-up failed: " + (error.response?.data?.message || error.message));
+            console.error("Sign-up error:", error, error.response?.data?.error);
+            toast.error("Sign-up failed: " + (error.response?.data?.error || "An error occurred"));
         });
     }
 
@@ -50,6 +52,14 @@ export default function SignUp() {
             <div className="flex flex-col tems-center gap-4 rounded-lg border bg-background px-6 py-10 text-center shadow-sm">
                 <h1 className="text-3xl font-semibold">Sign Up for an Account</h1>
                 <div className="p-2 space-y-4 mx-auto mt-8 flex flex-col">
+                    <div>
+                        <h2 className="text-left">First Name:</h2>
+                        <Input id="firstName" type="text" name="firstName" placeholder="First Name" value={data.firstname} onChange={(e) => handleChange("firstname", e.target.value)} />
+                    </div>
+                    <div>
+                        <h2 className="text-left">Last Name:</h2>
+                        <Input id="lastName" type="text" name="lastName" placeholder="Last Name" value={data.lastname} onChange={(e) => handleChange("lastname", e.target.value)} />
+                    </div>
                     <div>
                         <h2 className="text-left">Username:</h2>
                         <Input id="username" type="text" name="username" placeholder="Username" value={data.username} onChange={(e) => handleChange("username", e.target.value)} />
