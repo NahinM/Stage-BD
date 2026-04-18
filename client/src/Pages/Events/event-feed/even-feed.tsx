@@ -3,6 +3,7 @@ import { EventCard } from "./event-card"
 import {type EventCardType} from "./event-card-type"
 import { useEffect } from "react";
 import EventSearchBox from "./search";
+import Nav from "@/components/nav";
 
 export default function EventFeed() {
     const events = useEventStore((state) => state.events);
@@ -15,6 +16,12 @@ export default function EventFeed() {
 
     return (
         <div className="bg-muted min-h-screen p-4 w-full">
+            <Nav pages={[
+                { name: "Home", href: "/" },
+                { name: "Feed", href: "/feed" }
+            ]} />
+            <br /><br />
+
             <h1 className="text-2xl font-bold mb-4 text-center">Event Feed</h1>
 
             <EventSearchBox />
