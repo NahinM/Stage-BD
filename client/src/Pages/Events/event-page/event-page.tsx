@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {fetchEventDetails} from "./api";
 import type { EventDetails } from "./event-detail-type";
+import ReviewThread from "../../../components/Engagement/ReviewThread";
 
 export default function EventPage() {
     const { id } = useParams();
@@ -27,7 +28,10 @@ export default function EventPage() {
         );
     }
 
-    const formatMoney = (value: number) => `$${value.toFixed(2)}`;
+    const formatMoney = (value: number | null | undefined) => {
+        if (value == null) return "$0.00";
+        return `$${Number(value).toFixed(2)}`;
+    };
     const isSoldOut = detail.seat_limit > 0 && detail.seats_reserved >= detail.seat_limit;
     const seatsLeft = Math.max(detail.seat_limit - detail.seats_reserved, 0);
     const shareLink = `http://localhost:5173/event/${detail.id}`;
@@ -151,6 +155,11 @@ export default function EventPage() {
                         </article>
                     </aside>
                 </div>
+            </section>
+
+            {/* Injected Reddit-Style Review Thread */}
+            <section className="mx-auto mt-8 max-w-5xl">
+                <ReviewThread eventId={detail.id} />
             </section>
         </main>
     );

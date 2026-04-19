@@ -13,6 +13,13 @@ import MyReservations from "./Pages/Reservation&Checkin/my-reservations/MyReserv
 import CheckinDashboard from "./Pages/Reservation&Checkin/checkin/CheckinDashboard.tsx";
 import ScannerPage from "./Pages/Reservation&Checkin/checkin/ScannerPage.tsx";
 import Profile from "./Pages/User/profile.tsx";
+
+// New Modules
+import ArtistProfile from "./Pages/Engagement/ArtistProfile.tsx";
+import RecommendationsFeed from "./Pages/Engagement/RecommendationsFeed.tsx";
+import ContestHub from "./Pages/Contests/ContestHub.tsx";
+import ContestDetail from "./Pages/Contests/ContestDetail.tsx";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -32,11 +39,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signin",
-    element: <SignIn/>
+    element: <SignIn />
   },
   {
     path: "/signup",
-    element: <SignUp/>
+    element: <SignUp />
   },
   {
     path: "/event/:id",
@@ -66,4 +73,20 @@ export const router = createBrowserRouter([
     path: "/scanner",
     element: <ScannerPage />,
   },
+  {
+    path: "/artist/:artistId",
+    element: <ArtistProfile />,
+  },
+  {
+    path: "/recommendations",
+    element: <RecommendationsFeed />,
+  },
+  {
+    path: "/contests",
+    element: <ContestHub />,
+  },
+  {
+    path: "/contests/:contestId",
+    element: <ContestDetail />,
+  }
 ])
