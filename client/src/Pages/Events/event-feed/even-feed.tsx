@@ -2,8 +2,8 @@ import { useEventStore } from "@/store/Events/event-store";
 import { EventCard } from "./event-card"
 import {type EventCardType} from "./event-card-type"
 import { useEffect } from "react";
-import EventSearchBox from "./search";
 import Nav from "@/components/nav";
+import EventSearchBox from "./search-filter/search";
 
 export default function EventFeed() {
     const events = useEventStore((state) => state.events);
