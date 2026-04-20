@@ -23,7 +23,7 @@ export default function SignIn() {
             toast.error("Invalid username or password.");
         } else {
             toast.success("Sign-in successful!");
-            navigate("/profile");
+            navigate(-1);
         }
     }
 
@@ -39,9 +39,14 @@ export default function SignIn() {
                         {hidePassword && <EyeClosed className="ml-2 cursor-pointer" onClick={() => setHidePassword(!hidePassword)} />}
                     </div>
                 </div>
-                <Button className="w-20 mx-auto bg-green-600 text-black hover:bg-green-800 hover:text-white mt-4" onClick={handleSigninClick}>
+                <div className="flex gap-4 justify-center">
+                <Button className="w-20 bg-gray-600 text-black hover:bg-green-800 text-white mt-4" onClick={handleSigninClick}>
                     Sign In
                 </Button>
+                <Button className="w-20 bg-gray-600 text-black hover:bg-orange-800 text-white mt-4" onClick={() => navigate("/signup")}>
+                    Sign Up
+                </Button>
+                </div>
             </div>
         </div>
     )

@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner";
 
 interface Pages {
     name: string;
@@ -18,6 +19,11 @@ interface Pages {
 export default function Nav({ pages }: { pages: Pages[] }) {
 
     const user = useUserStore((state) => state.user);
+
+    const logout = () => {
+        useUserStore.getState().clearUser();
+        toast.success("Logged out successfully.");
+    }
 
     return (
         <nav className="flex flex-row fixed top-0 left-0 right-0 z-50 px-4 py-3 backdrop-blur-sm items-center">
@@ -56,7 +62,7 @@ export default function Nav({ pages }: { pages: Pages[] }) {
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem>
-                                            <Link to="/logout">Logout</Link>
+                                            <button onClick={logout}>Logout</button>
                                         </DropdownMenuItem>
                                     </DropdownMenuGroup>
                                 </DropdownMenuContent>
