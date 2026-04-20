@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { validateSignUpData } from "./validation";
 import type { SignUpData } from "./data-section";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const toastBody = (title: string, details?: string[]) => {
     return createElement(
@@ -53,7 +54,7 @@ export const handleSignUp = async (signUpdata: SignUpData) => {
         email: signUpdata.email,
         password: signUpdata.password,
         phone: signUpdata.phone,
-        birthYear: signUpdata.birthYear,
+        birthyear: signUpdata.birthyear,
         gender: signUpdata.gender,
         city: signUpdata.city,
     };
@@ -61,6 +62,8 @@ export const handleSignUp = async (signUpdata: SignUpData) => {
     axios.post("/api/signup", filteredData).then((res) => {
         toast.success(toastBody("Sign up successful", ["Please log in."]), { position: "top-center" });
         console.log("Sign up successful:", res.data);
+        const navigate = useNavigate();
+        navigate("/signin");
     }).catch((err) => {
         console.error("Sign up failed:", err);
         toast.error(toastBody("Sign up failed", ["Please try again."]), { position: "top-center" });

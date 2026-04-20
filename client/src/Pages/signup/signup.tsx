@@ -23,7 +23,7 @@ export default function SignUp() {
         confirmPassword: "",
         email: "",
         phone: "",
-        birthYear: 0,
+        birthyear: 0,
         gender: "",
         city: "",
     });
@@ -31,7 +31,7 @@ export default function SignUp() {
     const handleChange = (key: keyof SignUpData, val: string | number) => {
         setUserData((prevData: SignUpData) => ({
             ...prevData,
-            [key]: key === "birthYear" ? Number(val) : val
+            [key]: key === "birthyear" ? Number(val) : val
         }));
     };
 
@@ -102,13 +102,13 @@ export default function SignUp() {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="birthYear" className="text-sm font-medium text-slate-700">Birth Year</label>
+                            <label htmlFor="birthyear" className="text-sm font-medium text-slate-700">Birth Year</label>
                             <Input
-                                id="birthYear"
+                                id="birthyear"
                                 type="number"
                                 placeholder="Enter birth year"
-                                value={userData.birthYear}
-                                onChange={(e) => handleChange("birthYear", e.target.value)}
+                                value={userData.birthyear}
+                                onChange={(e) => handleChange("birthyear", e.target.value)}
                             />
                         </div>
                     </div>
