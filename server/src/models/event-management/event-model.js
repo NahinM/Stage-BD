@@ -25,7 +25,7 @@ export const EventModel = {
     if (search && search.value) {
       if (search.by === "title")
         WHERE.push(`title ILIKE '${`%${search.value}%`}'`);
-      if (search.by === "organizer_id")
+      if (search.by === "organizer")
         WHERE.push(`organizer_id = '${search.value}'`);
     }
     if (filter) {
