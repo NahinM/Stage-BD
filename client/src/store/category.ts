@@ -14,7 +14,7 @@ interface CategoryState {
 export const useCategoryStore = create<CategoryState>((set) => ({
     categories: [],
     fetchCategories: async () => {
-        axios.get("/api/categories").then((response) => response.data).then((data) => {
+        axios.get("/api/event/categories").then((response) => response.data).then((data) => {
             set({ categories: data });
         }).catch((error) => {
             console.error("Failed to fetch categories:", error);
