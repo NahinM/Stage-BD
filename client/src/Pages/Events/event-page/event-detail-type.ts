@@ -3,22 +3,23 @@ export interface EventDetails {
     organizer_id: string;
     title: string;
     description: string;
-    poster_url: string;
-    event_date: string;
-    event_time: string;
-    seat_limit: number;
+    poster_url: string | null;
+    event_date: string | null;
+    event_time: string | null;
+    seat_limit: number | null;
     seats_reserved: number;
-    category: string;
+    category_id: number | null;
     type: string;
-    streaming_link: string;
+    streaming_link: string | null;
     is_free: boolean;
-    price: number;
+    price: number | string;
     status: string;
     created_at: string;
-    venue: Venue | null;
+    venue_id: string | null;
 }
 
-interface Venue {
+export interface Venue {
+    id: string;
     name: string;
     address: string;
     city: string;
