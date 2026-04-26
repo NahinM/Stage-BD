@@ -5,12 +5,12 @@ import { EventCategoryModel } from "../../models/event-management/event-category
 export const EventController = {
   getEvent: async (req, res) => {
     const eventQuery = req.query ? JSON.parse(req.query.query) : null;
-    console.log("Received event query: ", eventQuery);
+    // console.log("Received event query: ", eventQuery);
 
     EventModel.read(eventQuery)
       .then((data) => {
         res.status(200).json(data);
-        console.log("Event data retrieved successfully: ", data);
+        // console.log("Event data retrieved successfully: ", data);
       })
       .catch((err) => {
         console.error("Error retrieving event object: ", err);
