@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import axios from "axios";
 import { Eye, EyeClosed } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { setUser } from "../../local-db/user";
+import {handleSigninAPI} from "./api";
 import { useNavigate } from "react-router-dom";
 
 export default function SignIn() {
@@ -14,20 +13,18 @@ export default function SignIn() {
     const [hidePassword, setHidePassword] = useState(true);
     const navigate = useNavigate();
 
-    const handleSignIn = () => {
-        axios.post("/api/signin",{
-            username: username,
-            password: password
-        })
-        .then(response => {
-            console.log(response.data);
-            toast.success(response.data.message);
-            setUser(response.data.user);
-            navigate("/");
-        })
-        .catch(error => {
-            toast.error("Sign-in failed: " + (error.response?.data?.message || error.message));
-        });
+    const handleSigninClick = async () => {
+        if (!username || !password) {
+            toast.error("Please enter both username and password.");
+            return;
+        }
+        const isSignedIn = await handleSigninAPI(username, password);
+        if (!isSignedIn) {
+            toast.error("Invalid username or password.");
+        } else {
+            toast.success("Sign-in successful!");
+            navigate(-1);
+        }
     }
 
     return (
@@ -42,9 +39,14 @@ export default function SignIn() {
                         {hidePassword && <EyeClosed className="ml-2 cursor-pointer" onClick={() => setHidePassword(!hidePassword)} />}
                     </div>
                 </div>
-                <Button className="w-20 mx-auto bg-green-600 text-black hover:bg-green-800 hover:text-white mt-4" onClick={handleSignIn}>
+                <div className="flex gap-4 justify-center">
+                <Button className="w-20 bg-gray-600 text-black hover:bg-green-800 text-white mt-4" onClick={handleSigninClick}>
                     Sign In
                 </Button>
+                <Button className="w-20 bg-gray-600 text-black hover:bg-orange-800 text-white mt-4" onClick={() => navigate("/signup")}>
+                    Sign Up
+                </Button>
+                </div>
             </div>
         </div>
     )

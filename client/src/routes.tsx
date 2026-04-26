@@ -11,11 +11,23 @@ import DigitalArtShowcase from "./Pages/adittya/showcase/digital-art-showcase.ts
 import OrganizerAnalytics from "./Pages/adittya/analytics/organizer-analytics.tsx";
 import CrowdfundingPage from "./Pages/adittya/crowdfunding/crowdfunding-page.tsx";
 import SponsorListings from "./Pages/adittya/sponsor/sponsor-listings.tsx";
+import EventPage from "./Pages/Events/event-page/event-page.tsx";
 
+
+import ReservationPage from "./Pages/Reservation&Checkin/reservation/ReservationPage.tsx";
+import ReservationSuccess from "./Pages/Reservation&Checkin/reservation/ReservationSuccess.tsx";
+import MyReservations from "./Pages/Reservation&Checkin/my-reservations/MyReservations.tsx";
+import CheckinDashboard from "./Pages/Reservation&Checkin/checkin/CheckinDashboard.tsx";
+import ScannerPage from "./Pages/Reservation&Checkin/checkin/ScannerPage.tsx";
+import Profile from "./Pages/User/profile.tsx";
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/profile",
+    element: <Profile />
   },
   {
     path: "/test",
@@ -58,7 +70,32 @@ export const router = createBrowserRouter([
     element: <SponsorListings />,
   },
   {
+    path: "/event/:id",
+    element: <EventPage />
+  },
+  {
     path: "*",
     element: <PageNotFound />,
   },
-]);
+
+  {
+    path: "/reserve/:eventId",
+    element: <ReservationPage />,
+  },
+  {
+    path: "/reservation/success/:code",
+    element: <ReservationSuccess />,
+  },
+  {
+    path: "/my-reservations",
+    element: <MyReservations />,
+  },
+  {
+    path: "/checkin",
+    element: <CheckinDashboard />,
+  },
+  {
+    path: "/scanner",
+    element: <ScannerPage />,
+  },
+])

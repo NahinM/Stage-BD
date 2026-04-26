@@ -1,4 +1,4 @@
-import { app } from "./config/config.js";
+import { app} from "./config/config.js";
 import './middlewares/middleware.js';
 import './routes/route.js';
 import { port } from "./config/env-variables.js";

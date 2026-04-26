@@ -1,10 +1,13 @@
-import { supabaseUrl, supabaseAnonKey } from './env-variables.js'
-import { createClient } from '@supabase/supabase-js'
-
-// Initialize client
-const supabase = createClient(
+import {
   supabaseUrl,
-  supabaseAnonKey
-)
+  supabaseAnonKey,
+  supabaseConnectionString,
+} from "./env-variables.js";
+import { createClient } from "@supabase/supabase-js";
+import postgres from "postgres";
+// Initialize client
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export { supabase };
+const sql = postgres(supabaseConnectionString);
+
+export { supabase, sql };
