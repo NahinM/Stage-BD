@@ -37,7 +37,7 @@ export const staticArtists: Artist[] = [
     image:
       "https://d2u0ktu8omkpf6.cloudfront.net/b6a6fc2159feb814fc60c6c062769f94e042fadaa7f53681.jpg",
     socialLinks: {
-      youtube: "https://www.youtube.com/",
+      youtube: "https://www.youtube.com/@salmanmuqtadir",
     },
     works: [
       {

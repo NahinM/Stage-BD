@@ -245,3 +245,4 @@ export const followArtist = async ({ follower_username, followed_username }) => 
   if (error) throw error;
   return { alreadyFollowed: false, data };
 };
+

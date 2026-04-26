@@ -8,6 +8,9 @@ import Home from "./Pages/home/home.tsx";
 import ArtistsPage from "./Pages/adittya/artist/artists-page.tsx";
 import ArtistDetails from "./Pages/adittya/artist/artist-details.tsx";
 import DigitalArtShowcase from "./Pages/adittya/showcase/digital-art-showcase.tsx";
+import OrganizerAnalytics from "./Pages/adittya/analytics/organizer-analytics.tsx";
+import CrowdfundingPage from "./Pages/adittya/crowdfunding/crowdfunding-page.tsx";
+import SponsorListings from "./Pages/adittya/sponsor/sponsor-listings.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +44,18 @@ export const router = createBrowserRouter([
   {
     path: "/showcase",
     element: <DigitalArtShowcase />,
+  },
+  {
+    path: "/organizer-analytics",
+    element: <OrganizerAnalytics />,
+  },
+  {
+    path: "/crowdfunding",
+    element: <CrowdfundingPage />,
+  },
+  {
+    path: "/sponsors",
+    element: <SponsorListings />,
   },
   {
     path: "*",

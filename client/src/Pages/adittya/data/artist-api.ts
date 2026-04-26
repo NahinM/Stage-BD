@@ -15,7 +15,7 @@ export type ArtistCardItem = {
 };
 
 export type WorkItem = {
-  id: number;
+  id: string | number;
   title: string;
   type: string;
   category: string;
@@ -30,7 +30,7 @@ export type ArtistDetail = ArtistCardItem & {
 };
 
 export type ShowcaseItem = {
-  id: number;
+  id: string | number;
   title: string;
   type: string;
   category: string;
@@ -56,17 +56,31 @@ const normalizeStaticArtist = (artist: Artist): ArtistDetail => ({
   works: artist.works,
 });
 
+const dedupeWorks = (works: WorkItem[]): WorkItem[] => {
+  const uniqueMap = new Map<string, WorkItem>();
+
+  works.forEach((work) => {
+    const key = String(work.id);
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, work);
+    }
+  });
+
+  return Array.from(uniqueMap.values());
+};
+
 export const fetchArtists = async (): Promise<ArtistCardItem[]> => {
   try {
     const { data } = await axios.get("/api/adittya/artists");
-    const dbArtists = data.artists || [];
+    const dbArtists = data.data || [];
 
     const merged = [...staticArtists.map(normalizeStaticArtist), ...dbArtists];
 
     const uniqueMap = new Map<string, ArtistCardItem>();
     merged.forEach((artist) => {
-      if (!uniqueMap.has(artist.id)) {
-        uniqueMap.set(artist.id, artist);
+      const key = artist.username || artist.id;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, artist);
       }
     });
 
@@ -84,14 +98,32 @@ export const fetchArtistDetails = async (username: string): Promise<ArtistDetail
 
   try {
     const { data } = await axios.get(`/api/adittya/artists/${username}`);
-    const dbArtist = data.artist;
+    const dbArtist = data.data;
 
-    if (!staticArtist) return dbArtist;
+    if (!dbArtist && staticArtist) {
+      return normalizeStaticArtist(staticArtist);
+    }
+
+    if (!staticArtist) {
+      return {
+        ...dbArtist,
+        works: dedupeWorks(dbArtist.works || []),
+      };
+    }
+
+    const normalizedStatic = normalizeStaticArtist(staticArtist);
 
     return {
-      ...normalizeStaticArtist(staticArtist),
+      ...normalizedStatic,
       ...dbArtist,
-      works: [...normalizeStaticArtist(staticArtist).works, ...(dbArtist.works || [])],
+      socialLinks: {
+        ...(normalizedStatic.socialLinks || {}),
+        ...(dbArtist.socialLinks || {}),
+      },
+      works: dedupeWorks([
+        ...normalizedStatic.works,
+        ...(dbArtist.works || []),
+      ]),
     };
   } catch (error) {
     console.error("Falling back to static artist details:", error);
@@ -107,14 +139,15 @@ export const fetchArtistDetails = async (username: string): Promise<ArtistDetail
 export const fetchShowcaseItems = async (): Promise<ShowcaseItem[]> => {
   try {
     const { data } = await axios.get("/api/adittya/showcase");
-    const dbItems = data.items || [];
+    const dbItems = data.data || [];
 
     const merged = [...staticShowcaseArtworks, ...dbItems];
 
-    const uniqueMap = new Map<number, ShowcaseItem>();
+    const uniqueMap = new Map<string, ShowcaseItem>();
     merged.forEach((item) => {
-      if (!uniqueMap.has(item.id)) {
-        uniqueMap.set(item.id, item);
+      const key = String(item.id);
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item);
       }
     });
 
@@ -146,7 +179,7 @@ export const addArtistWork = async (payload: {
 };
 
 export const updateArtistWork = async (
-  mediaId: number,
+  mediaId: string | number,
   payload: {
     username: string;
     title: string;
