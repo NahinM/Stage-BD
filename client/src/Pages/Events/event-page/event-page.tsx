@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchEventDetails, fetchVenueDetails } from "./api";
 import type { EventDetails, Venue } from "./event-detail-type";
+import { useNavigate } from "react-router-dom";
 
 export default function EventPage() {
     const { id } = useParams();
@@ -11,6 +12,7 @@ export default function EventPage() {
     const [venueLoading, setVenueLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [shareSupported, setShareSupported] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         setShareSupported(typeof navigator !== "undefined" && !!navigator.share);
@@ -205,6 +207,13 @@ export default function EventPage() {
                             <p className="mt-2 text-sm text-slate-600">
                                 {detail.is_free ? "This is a free event" : "Paid entry"}
                             </p>
+                            <button
+                                type="button" disabled={isSoldOut}
+                                className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition ${isSoldOut ? "bg-gray-500 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
+                                onClick={() => navigate(`/reserve/${detail.id}`)}
+                            >
+                                Reserve Ticket
+                            </button>
                         </div>
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
                             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Availability</p>
@@ -216,6 +225,7 @@ export default function EventPage() {
                             </p>
                         </div>
                     </div>
+
                 </section>
 
                 {/* Section 5: Venue */}
