@@ -1,4 +1,4 @@
 import { app } from "../../config/config.js";
-import { userController } from "../../controllers/controller.js";
+import { UserController } from "../../controllers/controller.js";
 
-app.get('/api/user/info', userController.user.getUserByInfo);
+app.get("/api/user/search", UserController.search);
