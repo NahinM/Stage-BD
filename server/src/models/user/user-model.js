@@ -20,7 +20,7 @@ export const UserModel = {
   },
   read: async (prop = { columns: null, id: null }) => {
     const { columns, id } = prop;
-    const COLUMNS = columns ? columns.join(", ") : UserColumns.join(", ");
+    const COLUMNS = columns ? columns : UserColumns.join(", ");
     const query = `select ${COLUMNS} from public."user" ${id ? `where id = '${id}'` : ""}`;
     const res = await sql.unsafe(query);
     return res;
