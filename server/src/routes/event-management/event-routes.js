@@ -1,7 +1,7 @@
 import { app } from "../../config/config.js";
-import { eventController } from "../../controllers/controller.js";
+import { EventController } from "../../controllers/controller.js";
+import { EventModel } from "../../models/event-management/event-model.js";
 
-app.get("/api/events", eventController.feed.getEvents);
-app.get("/api/events/:id", eventController.page.getEventDetails);
-app.get("/api/categories", eventController.category.getEventCategories);
-app.post("/api/searchevents", eventController.search.searchEvents);
+app.get("/api/event/", EventController.getEvent);
+app.get("/api/event/categories", EventController.getCategories);
+app.get("/api/event/venues", EventController.getVenues);
