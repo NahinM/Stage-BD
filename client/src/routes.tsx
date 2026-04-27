@@ -12,6 +12,7 @@ import OrganizerAnalytics from "./Pages/adittya/analytics/organizer-analytics.ts
 import CrowdfundingPage from "./Pages/adittya/crowdfunding/crowdfunding-page.tsx";
 import SponsorListings from "./Pages/adittya/sponsor/sponsor-listings.tsx";
 import EventPage from "./Pages/Events/event-page/event-page.tsx";
+import EventCreate from "./Pages/Events/event-create/event-create.tsx";
 
 
 import ReservationPage from "./Pages/Reservation&Checkin/reservation/ReservationPage.tsx";
@@ -39,7 +40,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signin",
-    element: <SignIn />,
+    element: <SignIn />
   },
   {
     path: "/signup",
@@ -72,6 +73,10 @@ export const router = createBrowserRouter([
   {
     path: "/event/:id",
     element: <EventPage />
+  },
+  {
+    path: "/event/create",
+    element: <EventCreate />
   },
   {
     path: "*",
