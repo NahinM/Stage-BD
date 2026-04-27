@@ -11,6 +11,10 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { useCategoryStore } from "@/store/category";
+import { useUserStore } from "@/store/User/user";
+import { createEvent } from "./api";
+import type { EventCreateData } from "./data-section";
+import { toast } from "sonner";
 
 export default function EventCreate() {
     const [status, setStatus] = useState<string>("Draft");
@@ -38,6 +42,40 @@ export default function EventCreate() {
     }, [categoryId]);
 
     const category = useCategoryStore((state) => state.categories);
+    const user = useUserStore((state) => state.user);
+    const [categoryName, setCategoryName] = useState<string>("");
+
+    const handleCreateEvent = async () => {
+        const eventData: EventCreateData = {
+            organizer_id: user?.id,
+            title: title,
+            poster_url: posterUrl,
+            event_date: eventDate,
+            event_time: eventTime,
+            description: description,
+            venue_id: null,
+            seat_limit: seatLimit,
+            category_id: categoryId,
+            status: status.toLowerCase(),
+            type: type.toLowerCase(),
+            streaming_link: streamingLink,
+            is_free: isFree,
+            price: price
+        };
+
+        const venueData = {
+            name: venueName,
+            address: venueAddress,
+            city: venueCity,
+            capacity: venueCapacity
+        };
+        const result = await createEvent(eventData, venueData);
+        if (result.success) {
+            toast.success("Event created successfully!", { position: "top-right" });
+        } else {
+            toast.error(result.message, { position: "top-right" });
+        }
+    }
     return (
         <div>
             <Nav pages={[
@@ -62,8 +100,8 @@ export default function EventCreate() {
                                 <SelectContent>
                                     <SelectGroup>
                                         <SelectLabel>Status</SelectLabel>
-                                        <SelectItem value="Draft" onClick={() => setStatus("Draft")}>Draft</SelectItem>
-                                        <SelectItem value="Published" onClick={() => setStatus("Published")}>Published</SelectItem>
+                                        <SelectItem value={"Draft"} onClick={() => setStatus("Draft")}>Draft</SelectItem>
+                                        <SelectItem value={"Published"} onClick={() => setStatus("Published")}>Published</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
@@ -112,7 +150,7 @@ export default function EventCreate() {
 
                         <div className="flex flex-col gap-2">
                             <label htmlFor="category" className="text-sm font-medium text-slate-700">Category</label>
-                            <Select value={"Selectvalue"}>
+                            <Select value={categoryName}>
                                 <SelectTrigger id="category" className="w-full">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
@@ -121,7 +159,10 @@ export default function EventCreate() {
                                         <SelectLabel>Category</SelectLabel>
                                         {
                                             category.map((option, index) => (
-                                                <SelectItem key={index} value={String(option.name)} onClick={() => setCategoryId(option.id)}>
+                                                <SelectItem key={index} value={String(option.name)} onClick={() => {
+                                                    setCategoryId(option.id);
+                                                    setCategoryName(option.name);
+                                                }}>
                                                     {option.name}
                                                 </SelectItem>
                                             ))
@@ -283,7 +324,10 @@ export default function EventCreate() {
                 </section>
 
                 <section>
-                    <button className="w-full rounded-md bg-green-600 px-4 py-2 text-white font-semibold hover:bg-green-700 transition-colors duration-300 mx-auto max-w-sm block mb-10 shadow-lg shadow-green-500/50">
+                    <button
+                        className="w-full rounded-md bg-green-600 px-4 py-2 text-white font-semibold hover:bg-green-700 transition-colors duration-300 mx-auto max-w-sm block mb-10 shadow-lg shadow-green-500/50"
+                        onClick={handleCreateEvent}
+                    >
                         Create Event
                     </button>
                 </section>
