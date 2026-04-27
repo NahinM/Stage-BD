@@ -5,6 +5,7 @@ import SignUp from "./Pages/signup/signup.tsx";
 import Test from "./Pages/test/test-page.tsx";
 import EventFeed from "./Pages/Events/event-feed/even-feed.tsx";
 import EventPage from "./Pages/Events/event-page/event-page.tsx";
+import EventCreate from "./Pages/Events/event-create/event-create.tsx";
 
 import Home from "./Pages/home/home.tsx";
 import ReservationPage from "./Pages/Reservation&Checkin/reservation/ReservationPage.tsx";
@@ -32,15 +33,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signin",
-    element: <SignIn/>
+    element: <SignIn />
   },
   {
     path: "/signup",
-    element: <SignUp/>
+    element: <SignUp />
   },
   {
     path: "/event/:id",
     element: <EventPage />
+  },
+  {
+    path: "/event/create",
+    element: <EventCreate />
   },
   {
     path: "*",
