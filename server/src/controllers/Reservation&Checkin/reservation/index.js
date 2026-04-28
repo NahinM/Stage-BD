@@ -60,9 +60,18 @@ export const getMyReservations = async (req, res) => {
 };
 
 export const cancelMyReservation = async (req, res) => {
-    const { reservationId } = req.params;
-    const userId = req.user?.id;
-    const result = await cancelReservation(reservationId, userId);
-    if (!result) return res.status(400).json({ message: "Could not cancel reservation" });
-    res.json({ message: "Reservation cancelled successfully" });
+  const { reservationId } = req.params;
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const result = await cancelReservation(reservationId, userId);
+
+  if (!result) {
+    return res.status(400).json({ message: "Could not cancel reservation" });
+  }
+
+  res.json({ message: "Reservation cancelled successfully" });
 };
