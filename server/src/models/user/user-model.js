@@ -35,6 +35,18 @@ export const UserModel = {
       await sql`delete from public."user" where id = ${id} returning *`;
     return res;
   },
+  signIn: {
+    pass: async (username) => {
+      const res =
+        await sql`SELECT password FROM public."user" WHERE username = ${username}`;
+      return res.length > 0 ? res[0].password : null;
+    },
+    info: async (username) => {
+      const res =
+        await sql`SELECT id, username FROM public."user" WHERE username = ${username}`;
+      return res.length > 0 ? res[0] : null;
+    },
+  },
   search: {
     username: async (value) => {
       const res =
