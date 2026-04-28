@@ -1,6 +1,6 @@
 import { useEventStore } from "@/store/Events/event-store";
 import { EventCard } from "./event-card"
-import {type EventCardType} from "./event-card-type"
+import { type EventCardType } from "./event-card-type"
 import { useEffect } from "react";
 import Nav from "@/components/nav";
 import EventSearchBox from "./search-filter/search";
@@ -12,7 +12,7 @@ export default function EventFeed() {
         if (events.length === 0) {
             useEventStore.getState().fetchEvents();
         }
-    },[])
+    }, [])
 
     return (
         <div className="bg-muted min-h-screen p-4 w-full">
