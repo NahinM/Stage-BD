@@ -32,7 +32,7 @@ export const UserController = {
         res.status(500).json({ message: "Error retrieving user role" });
       });
   },
-  refresh: async (req, res) => {
+  refreshAccessToken: async (req, res) => {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
       return res.status(401).json({ message: "Refresh token is missing" });
@@ -43,5 +43,9 @@ export const UserController = {
     }
     // Here you would typically generate a new access token
     res.status(200).json({ message: "Refresh token is valid", user: decoded });
+  },
+  logout: async (req, res) => {
+    res.clearCookie("refreshToken");
+    res.status(200).json({ message: "Logged out successfully" });
   },
 };

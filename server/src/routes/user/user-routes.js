@@ -3,4 +3,5 @@ import { UserController } from "../../controllers/controller.js";
 
 app.get("/api/user/search", UserController.search);
 app.get("/api/user/role", UserController.role);
-app.get("/api/user/refresh", UserController.refresh);
+app.get("/api/user/refresh", UserController.refreshAccessToken);
+app.post("/api/user/logout", UserController.logout);

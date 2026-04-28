@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { type User } from "../../types/user-type";
+import axios from "axios";
 
 interface UserState {
   user: User | null;
@@ -20,3 +21,13 @@ export const useUserStore = create<UserState>((set) => ({
   setUserRoles: (userRoles) => set({ userRoles }),
   clearUser: () => set({ user: null, jwtToken: null, userRoles: null }),
 }));
+
+
+export const userLogout = async () => {
+  axios.post("/api/user/logout").then(response => {
+    console.log("Logout response:", response.data);
+    useUserStore.getState().clearUser();
+  }).catch(error => {
+    console.error("Logout error:", error.response?.data?.message || error.message);
+  });
+}

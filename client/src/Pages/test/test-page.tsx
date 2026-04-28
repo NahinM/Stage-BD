@@ -1,5 +1,5 @@
 import axios from "axios"
-
+import { userLogout } from "@/store/User/user";
 export default function TestPage() {
     const testAPI = async () => {
         await axios.get("/api/user/refresh")
@@ -10,6 +10,7 @@ export default function TestPage() {
                 console.error("API error:", error.response?.data?.message || error.message);
             });
     }
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-muted/30">
             <div className="p-2">
@@ -19,6 +20,12 @@ export default function TestPage() {
                     onClick={testAPI}
                 >
                     Test API
+                </button>
+                <button
+                    className="mt-4 rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                    onClick={userLogout}
+                >
+                    Logout
                 </button>
             </div>
         </div>
