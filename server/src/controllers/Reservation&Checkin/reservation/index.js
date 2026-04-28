@@ -31,7 +31,7 @@ export const applyPromoCode = async (req, res) => {
 
 export const reserveTicket = async (req, res) => {
     const { eventId, slotId, promoCodeId, finalPrice } = req.body;
-    const userId = "00960726-dd44-48ea-9ed8-d0bcef050014";
+    const { userId } = req.query;
     if (!userId) return res.status(401).json({ message: "Not authenticated" });
 
     const event = await getEventWithSlots(eventId);
@@ -53,7 +53,7 @@ export const reserveTicket = async (req, res) => {
 };
 
 export const getMyReservations = async (req, res) => {
-    const userId = "00960726-dd44-48ea-9ed8-d0bcef050014";
+    const { userId } = req.query;
     if (!userId) return res.status(401).json({ message: "Not authenticated" });
     const reservations = await getUserReservations(userId);
     res.json({ reservations });
