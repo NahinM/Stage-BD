@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
-import { supabase } from '../../lib/supabase'; 
+import axios from 'axios';
 
 interface FollowButtonProps {
     artistId: string;
@@ -18,23 +18,25 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     const [isFollowing, setIsFollowing] = useState(initialFollowing);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Sync state when initialFollowing changes
+    useEffect(() => {
+        setIsFollowing(initialFollowing);
+    }, [initialFollowing]);
+
     const handleToggle = async () => {
-        if (!currentUserId) return;
+        if (!currentUserId || currentUserId === "00000000-0000-0000-0000-000000000000") return;
         
         setIsLoading(true);
         try {
             if (isFollowing) {
-                const { error } = await supabase
-                    .from('follow')
-                    .delete()
-                    .match({ follower_id: currentUserId, followed_id: artistId });
-                if(error) throw error;
+                await axios.delete(`http://localhost:3000/api/follows`, {
+                    data: { follower_id: currentUserId, followed_id: artistId }
+                });
             } else {
-                const { error } = await supabase
-                    .from('follow')
-                    .insert([{ follower_id: currentUserId, followed_id: artistId }]);
-                // Ignore unique constraint error if they click fast
-                if(error && error.code !== '23505') throw error;
+                await axios.post(`http://localhost:3000/api/follows`, {
+                    follower_id: currentUserId,
+                    followed_id: artistId
+                });
             }
             
             const newState = !isFollowing;
@@ -42,7 +44,6 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
             if(onFollowChange) onFollowChange(newState);
         } catch (error) {
             console.error("Failed to follow/unfollow", error);
-            // In a real app, maybe trigger a toast notification here
         } finally {
             setIsLoading(false);
         }

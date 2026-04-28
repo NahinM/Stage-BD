@@ -36,3 +36,21 @@ export const getFollowing = async (userId) => {
         .eq('follower_id', userId);
     return { data, error };
 };
+// Get follower count
+export const getFollowerCount = async (userId) => {
+    const { count, error } = await supabase
+        .from('follow')
+        .select('id', { count: 'exact', head: true })
+        .eq('followed_id', userId);
+    return { count, error };
+};
+
+// Check if a user follows another
+export const checkFollowStatus = async (followerId, followedId) => {
+    const { data, error } = await supabase
+        .from('follow')
+        .select('id')
+        .match({ follower_id: followerId, followed_id: followedId })
+        .maybeSingle();
+    return { isFollowing: !!data, error };
+};

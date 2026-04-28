@@ -37,3 +37,23 @@ export const voteEntry = async (req, res) => {
         res.status(500).send({ message: "Failed to cast vote." });
     }
 };
+export const getContests = async (req, res) => {
+    try {
+        const data = await contestsModel.getAllContests();
+        res.status(200).send({ message: "Contests fetched.", data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch contests." });
+    }
+};
+
+export const getContestById = async (req, res) => {
+    const { contest_id } = req.params;
+    try {
+        const data = await contestsModel.getContest(contest_id);
+        res.status(200).send({ message: "Contest fetched.", data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch contest." });
+    }
+};

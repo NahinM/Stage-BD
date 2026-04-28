@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
 import { Trophy, ChevronRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 export default function ContestHub() {
     const [contests, setContests] = useState<any[]>([]);
@@ -11,11 +11,10 @@ export default function ContestHub() {
         const fetchContests = async () => {
             setLoading(true);
             try {
-                const { data } = await supabase
-                    .from('contest')
-                    .select('*, event(title)')
-                    .order('submission_end', { ascending: false });
-                setContests(data || []);
+                const res = await axios.get('http://localhost:3000/api/contests');
+                setContests(res.data.data || []);
+            } catch (err) {
+                console.error("Failed to fetch contests", err);
             } finally {
                 setLoading(false);
             }

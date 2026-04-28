@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { FollowButton } from '../../components/Engagement/FollowButton';
 import { MapPin, Calendar, Users, Loader2, ArrowBigUp, ArrowBigDown } from 'lucide-react';
+import { useUserStore } from '../../store/User/user';
+import axios from 'axios';
 
 export default function ArtistProfile() {
     const { artistId } = useParams<{ artistId: string }>();
@@ -11,10 +12,11 @@ export default function ArtistProfile() {
     const [followerCount, setFollowerCount] = useState(0);
     const [voteScore, setVoteScore] = useState(0);
     const [userVote, setUserVote] = useState<number | null>(null);
+    const [isFollowing, setIsFollowing] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // In a real app, this comes from an Auth Context!
-    const currentUserId = "00000000-0000-0000-0000-000000000000";
+    const { user } = useUserStore();
+    const currentUserId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     useEffect(() => {
         const fetchArtistData = async () => {
@@ -22,37 +24,31 @@ export default function ArtistProfile() {
             setLoading(true);
 
             try {
-                // Fetch basic user profile
-                const { data: userData } = await supabase
-                    .from('user')
-                    .select('id, username, firstname, lastname, avatar_url, bio, city')
-                    .eq('id', artistId)
-                    .single();
+                // Fetch basic user profile via API
+                const profileRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/profile`);
+                setArtist(profileRes.data.data);
 
-                setArtist(userData);
+                // Fetch follower count via API
+                const countRes = await axios.get(`http://localhost:3000/api/users/${artistId}/followers/count`);
+                setFollowerCount(countRes.data.count);
 
-                // Fetch follower count
-                const { count } = await supabase.from('follow').select('id', { count: 'exact', head: true }).eq('followed_id', artistId);
-                setFollowerCount(count || 0);
-
-                // Fetch their upcoming events
-                const { data: eventsData } = await supabase
-                    .from('event_artist')
-                    .select('event!inner(*, venue(name, city))')
-                    .eq('artist_id', artistId);
-
-                if (eventsData) {
-                    setEvents(eventsData.map(e => e.event));
-                }
+                // Fetch their upcoming events via API
+                const eventsRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/events`);
+                setEvents(eventsRes.data.data || []);
 
                 // Fetch Artist Vote Score
                 try {
-                    const scoreRes = await fetch(`http://localhost:3000/api/artist/${artistId}/score`);
-                    if (scoreRes.ok) {
-                        const { score } = await scoreRes.json();
-                        setVoteScore(score || 0);
-                    }
+                    const scoreRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/score`);
+                    setVoteScore(scoreRes.data.score || 0);
                 } catch (e) { console.error("Could not fetch score"); }
+
+                // Fetch Follow Status
+                if (currentUserId !== "00000000-0000-0000-0000-000000000000") {
+                    const statusRes = await axios.get(`http://localhost:3000/api/follows/status`, {
+                        params: { follower_id: currentUserId, followed_id: artistId }
+                    });
+                    setIsFollowing(statusRes.data.isFollowing);
+                }
 
             } catch (err) {
                 console.error(err);
@@ -61,7 +57,7 @@ export default function ArtistProfile() {
             }
         };
         fetchArtistData();
-    }, [artistId]);
+    }, [artistId, currentUserId]);
 
     const handleVote = async (type: 1 | -1) => {
         if (userVote === type) return;
@@ -70,10 +66,9 @@ export default function ArtistProfile() {
         setVoteScore(prev => prev + (type === 1 ? (prevVote === -1 ? 2 : 1) : (prevVote === 1 ? -2 : -1)));
 
         try {
-            await fetch(`http://localhost:3000/api/artist/${artistId}/vote`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ voter_id: currentUserId, vote_type: type })
+            await axios.post(`http://localhost:3000/api/artist/${artistId}/vote`, {
+                voter_id: currentUserId,
+                vote_type: type
             });
         } catch {
             setUserVote(prevVote); // rollback on fail
@@ -113,7 +108,7 @@ export default function ArtistProfile() {
                         <FollowButton
                             artistId={artist.id}
                             currentUserId={currentUserId}
-                            initialFollowing={false}
+                            initialFollowing={isFollowing}
                             onFollowChange={(isFollowing) => setFollowerCount(prev => isFollowing ? prev + 1 : prev - 1)}
                         />
 

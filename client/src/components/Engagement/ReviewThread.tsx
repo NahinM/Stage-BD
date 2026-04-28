@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, MessageSquare, Send } from 'lucide-react';
+import axios from 'axios';
+import { useUserStore } from '../../store/User/user';
 
 export interface Review {
     id: string;
@@ -29,45 +31,33 @@ export const ReviewThread: React.FC<ReviewThreadProps> = ({ review, currentUserI
         // Optimistic UI update
         setLocalScore(prev => prev + voteType); 
         try {
-            const res = await fetch(`http://localhost:3000/api/reviews/${review.id}/vote`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ voter_id: currentUserId, vote_type: voteType })
+            await axios.post(`http://localhost:3000/api/reviews/${review.id}/vote`, {
+                voter_id: currentUserId,
+                vote_type: voteType
             });
-            if(!res.ok) {
-                // Revert on error
-                setLocalScore(prev => prev - voteType);
-                alert("Failed to cast vote. You might have already voted.");
-            }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
+            // Revert on error
             setLocalScore(prev => prev - voteType);
+            alert(e.response?.data?.message || "Failed to cast vote. You might have already voted.");
         }
     };
 
     const submitReply = async () => {
         if (!replyText.trim()) return;
         try {
-            const res = await fetch(`http://localhost:3000/api/reviews`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    event_id: eventId,
-                    reviewer_id: currentUserId,
-                    parent_id: review.id,
-                    review_text: replyText
-                })
+            await axios.post(`http://localhost:3000/api/reviews`, {
+                event_id: eventId,
+                reviewer_id: currentUserId,
+                parent_id: review.id,
+                review_text: replyText
             });
-            if (res.ok) {
-                setReplyText("");
-                setIsReplying(false);
-                onReplySubmitted(); // Trigger parent to refetch data
-            } else {
-                const data = await res.json();
-                alert(data.message || "Failed to reply. Max limit reached or event not attended.");
-            }
-        } catch(e) {
+            setReplyText("");
+            setIsReplying(false);
+            onReplySubmitted(); // Trigger parent to refetch data
+        } catch(e: any) {
             console.error("Reply error:", e);
+            alert(e.response?.data?.message || "Failed to reply. Max limit reached or event not attended.");
         }
     };
 
@@ -159,16 +149,13 @@ export default function ReviewSection({ eventId }: { eventId: string }) {
     const [newReviewText, setNewReviewText] = useState("");
     const [loading, setLoading] = useState(true);
 
-    // Hardcoded for now. Switch to Auth context later.
-    const currentUserId = "00000000-0000-0000-0000-000000000000";
+    const { user } = useUserStore();
+    const currentUserId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     const fetchReviews = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/reviews/event/${eventId}`);
-            if (res.ok) {
-                const data = await res.json();
-                setReviews(data.data || []);
-            }
+            const res = await axios.get(`http://localhost:3000/api/reviews/event/${eventId}`);
+            setReviews(res.data.data || []);
         } catch (e) {
             console.error(e);
         } finally {
@@ -183,26 +170,18 @@ export default function ReviewSection({ eventId }: { eventId: string }) {
     const submitTopLevelReview = async () => {
         if (!newReviewText.trim()) return;
         try {
-            const res = await fetch(`http://localhost:3000/api/reviews`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    event_id: eventId,
-                    reviewer_id: currentUserId,
-                    parent_id: null,
-                    review_text: newReviewText,
-                    rating: 5 // Default rating for top level
-                })
+            await axios.post(`http://localhost:3000/api/reviews`, {
+                event_id: eventId,
+                reviewer_id: currentUserId,
+                parent_id: null,
+                review_text: newReviewText,
+                rating: 5 // Default rating for top level
             });
-            if (res.ok) {
-                setNewReviewText("");
-                fetchReviews();
-            } else {
-                const data = await res.json();
-                alert(data.message || "Failed to post review. Ensure you attended this event.");
-            }
-        } catch(e) {
+            setNewReviewText("");
+            fetchReviews();
+        } catch(e: any) {
             console.error("Review post error:", e);
+            alert(e.response?.data?.message || "Failed to post review. Ensure you attended this event.");
         }
     };
 

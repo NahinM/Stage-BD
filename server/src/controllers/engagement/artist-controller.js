@@ -28,3 +28,24 @@ export const getArtistScore = async (req, res) => {
         res.status(500).send({ message: "Failed to fetch score." });
     }
 };
+export const getArtistProfile = async (req, res) => {
+    const { artist_id } = req.params;
+    try {
+        const data = await artistModel.getArtistDetails(artist_id);
+        res.status(200).send({ message: "Artist profile fetched.", data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch artist profile." });
+    }
+};
+
+export const getArtistEvents = async (req, res) => {
+    const { artist_id } = req.params;
+    try {
+        const data = await artistModel.getArtistEvents(artist_id);
+        res.status(200).send({ message: "Artist events fetched.", data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch artist events." });
+    }
+};

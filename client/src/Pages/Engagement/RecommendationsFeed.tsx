@@ -1,23 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, Calendar, MapPin, Loader2 } from 'lucide-react';
+import axios from 'axios';
+import { useUserStore } from '../../store/User/user';
 
 export default function RecommendationsFeed() {
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // In a real application, replace this with your actual Auth Context user ID
-    const currentUserId = "00000000-0000-0000-0000-000000000000";
+    const { user } = useUserStore();
+    const currentUserId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     useEffect(() => {
         const fetchRecommendations = async () => {
             setLoading(true);
             try {
                 // Fetch curated events from our Smart Recommendations Backend Engine
-                const res = await fetch(`http://localhost:3000/api/recommendations/${currentUserId}`);
-                if (res.ok) {
-                    const json = await res.json();
-                    setEvents(json.data || []);
-                }
+                const res = await axios.get(`http://localhost:3000/api/recommendations/${currentUserId}`);
+                setEvents(res.data.data || []);
             } catch (e) {
                 console.error("Failed to fetch recommendations", e);
             } finally {

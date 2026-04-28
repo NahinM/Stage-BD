@@ -23,3 +23,21 @@ export const getScore = async (artist_id) => {
     const score = data.reduce((acc, curr) => acc + curr.vote_type, 0);
     return score;
 };
+export const getArtistDetails = async (artistId) => {
+    const { data, error } = await supabase
+        .from('user')
+        .select('id, username, firstname, lastname, avatar_url, bio, city')
+        .eq('id', artistId)
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const getArtistEvents = async (artistId) => {
+    const { data, error } = await supabase
+        .from('event_artist')
+        .select('event!inner(*, venue(name, city))')
+        .eq('artist_id', artistId);
+    if (error) throw error;
+    return data.map(e => e.event);
+};

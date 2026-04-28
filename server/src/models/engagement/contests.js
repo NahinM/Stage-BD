@@ -53,3 +53,12 @@ export const castVote = async (entryId, voterId, voteType) => {
     if (updateError) throw updateError;
     return entryData;
 };
+// Get all contests
+export const getAllContests = async () => {
+    const { data, error } = await supabase
+        .from('contest')
+        .select('*, event(title)')
+        .order('submission_end', { ascending: false });
+    if (error) throw error;
+    return data;
+};

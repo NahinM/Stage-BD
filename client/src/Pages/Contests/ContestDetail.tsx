@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { Trophy, Upload, ArrowUp, ArrowDown, Send, Loader2, ExternalLink } from 'lucide-react';
+import { useUserStore } from '../../store/User/user';
+import axios from 'axios';
 
 export default function ContestDetail() {
     const { contestId } = useParams();
@@ -9,20 +10,19 @@ export default function ContestDetail() {
     const [entries, setEntries] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     
-    // In a real app, from Auth Context
-    const currentUserId = "00000000-0000-0000-0000-000000000000";
+    const { user } = useUserStore();
+    const currentUserId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     const fetchContestData = async () => {
         setLoading(true);
         try {
-            const { data: cData } = await supabase.from('contest').select('*').eq('id', contestId).single();
-            setContest(cData);
+            const cRes = await axios.get(`http://localhost:3000/api/contests/${contestId}`);
+            setContest(cRes.data.data);
 
-            const res = await fetch(`http://localhost:3000/api/contests/${contestId}/leaderboard`);
-            if (res.ok) {
-                const j = await res.json();
-                setEntries(j.data || []);
-            }
+            const res = await axios.get(`http://localhost:3000/api/contests/${contestId}/leaderboard`);
+            setEntries(res.data.data || []);
+        } catch (err) {
+            console.error("Failed to fetch contest data", err);
         } finally {
             setLoading(false);
         }
@@ -32,10 +32,9 @@ export default function ContestDetail() {
 
     const handleVote = async (entryId: string, voteType: number) => {
         try {
-            await fetch(`http://localhost:3000/api/contests/entry/${entryId}/vote`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ voter_id: currentUserId, vote_type: voteType })
+            await axios.post(`http://localhost:3000/api/contests/entry/${entryId}/vote`, {
+                voter_id: currentUserId,
+                vote_type: voteType
             });
             fetchContestData(); // Refresh UI for accurate score
         } catch(e) {
@@ -51,10 +50,11 @@ export default function ContestDetail() {
         if(!url) return;
 
         try {
-            await fetch(`http://localhost:3000/api/contests/entry`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contest_id: contestId, user_id: currentUserId, content_url: url, description: desc })
+            await axios.post(`http://localhost:3000/api/contests/entry`, {
+                contest_id: contestId,
+                user_id: currentUserId,
+                content_url: url,
+                description: desc
             });
             fetchContestData();
             (e.target as HTMLFormElement).reset();
