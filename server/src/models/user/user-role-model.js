@@ -3,7 +3,7 @@ import { sql } from "../../config/database.js";
 export const UserRoleModel = {
   read: async (userID) => {
     const res =
-      await sql`select * from public."user_role" where user_id = ${userID}`;
+      await sql`select role from public."user_role" where user_id = ${userID}`;
     return res;
   },
   add: async (userID, role) => {

@@ -1,5 +1,10 @@
+import { authorize } from "../../middlewares/authentication/auth.js";
 import { UserModel } from "../../models/user/user-model.js";
 import { UserRoleModel } from "../../models/user/user-role-model.js";
+import {
+  verifyRefreshToken,
+  generateAccessToken,
+} from "../../middlewares/authentication/token.js";
 
 export const UserController = {
   search: async (req, res) => {
@@ -29,6 +34,57 @@ export const UserController = {
       .catch((err) => {
         console.error("Error retrieving user role: ", err);
         res.status(500).json({ message: "Error retrieving user role" });
+      });
+  },
+  refreshAccessToken: async (req, res) => {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token is missing" });
+    }
+    const decoded = await verifyRefreshToken(refreshToken);
+    if (!decoded) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+    const userRoles = await UserRoleModel.read(decoded.id)
+      .then((roles) => roles.map((r) => r.role))
+      .catch((err) => {
+        console.error("Error retrieving user roles: ", err);
+        return null;
+      });
+    const payload = {
+      id: decoded.id,
+      username: decoded.username,
+      roles: userRoles,
+    };
+    const accessToken = generateAccessToken(payload);
+    res.status(200).json({
+      message: "Refresh token is valid",
+      user: decoded,
+      roles: userRoles,
+      accessToken: accessToken,
+    });
+    // Here you would typically generate a new access token
+  },
+  logout: async (req, res) => {
+    res.clearCookie("refreshToken");
+    res.status(200).json({ message: "Logged out successfully" });
+  },
+  get: async (req, res) => {
+    const authResult = await authorize(req.headers);
+    if (!authResult) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userID = authResult.id;
+    if (!userID) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    UserModel.read({ id: userID })
+      .then((data) => {
+        res.status(200).json(data[0]);
+      })
+      .catch((err) => {
+        console.error("Error retrieving user: ", err);
+        res.status(500).json({ message: "Error retrieving user" });
       });
   },
 };

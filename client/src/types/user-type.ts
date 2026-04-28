@@ -4,11 +4,11 @@ export interface User {
     firstname: string;
     lastname: string;
     email: string;
-    roles: string[];
     phone: string;
     birthyear: number;
     gender: string;
     city: string;
     bio: string | null;
     is_verified: boolean;
+    avatar_url: string | null;
 }

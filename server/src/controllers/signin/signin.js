@@ -1,8 +1,9 @@
-import * as signInModel from "../../models/signin/signin.js";
 import { verifyPassword } from "../../middlewares/authentication/hashpass.js";
+import { UserModel } from "../../models/user/user-model.js";
+import { generateRefreshToken } from "../../middlewares/authentication/token.js";
 
 const validate = async (username, password) => {
-  const hashedPassword = await signInModel.getHashedPassword(username);
+  const hashedPassword = await UserModel.signIn.pass(username);
   if (!hashedPassword) {
     return { success: false, error: "Invalid username or password" };
   }
@@ -18,19 +19,33 @@ const validate = async (username, password) => {
 
 export const signIn = async (req, res) => {
   const { username, password } = req.body;
+  console.log(`Attempting to sign in user: ${username}`);
+  if (!username || !password) {
+    return res
+      .status(400)
+      .send({ message: "Username and password are required" });
+  }
   try {
     const validation = await validate(username, password);
-
     if (!validation.success) {
-      return res.status(401).send({ message: validation.error, user: null });
+      console.warn(`Sign in failed for user ${username}: ${validation.error}`);
+      return res.status(401).send({ message: validation.error });
     }
-
-    const userDetail = await signInModel.getUserDetail(username);
-    const userRoles = await signInModel.getUserRoles(userDetail.id);
-    userDetail.roles = userRoles;
-    return res.send({ message: "Sign-in successful!", user: userDetail });
+    const user = await UserModel.signIn.info(username);
+    const refreshToken = generateRefreshToken({
+      id: user.id,
+      username: user.username,
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    console.log(`User ${username} signed in successfully`);
+    res.send({ message: "Sign in successful" });
   } catch (error) {
-    console.error("Sign-in failed:", error);
-    return res.status(500).send({ message: "Sign-in failed.", user: null });
+    console.error("Error during sign in: ", error);
+    res.status(500).send({ message: "Internal server error" });
   }
 };
