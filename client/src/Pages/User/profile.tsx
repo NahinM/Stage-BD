@@ -1,11 +1,14 @@
 import { useUserStore } from "@/store/User/user";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Nav from "@/components/nav";
 
 export default function Profile() {
     const { user } = useUserStore();
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 p-6">
+            <Nav pages={[{ name: "Home", href: "/" },{ name: "feed", href: "/feed" }]} />
+            <br /><br />
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Welcome Header */}
                 <div className="space-y-2">

@@ -1,25 +1,25 @@
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select"
 import { fetchUsers, searchAndFilterEvents } from "./api";
 
 import { useCategoryStore } from "@/store/category"
 import { useEffect, useState } from "react";
-import { setEvents, fetchEvents, events } from "@/store/Events/event-store.ts";
+import { setEvents, fetchEvents } from "@/store/Events/event-store.ts";
 
 export default function EventSearchBox() {
     const [searchBy, setSearchBy] = useState<string>("Title");
     const [searchValue, setSearchValue] = useState<string>("");
     const [userId, setUserId] = useState<string>("");
-    const [users, setUsers] = useState<{id: string, username: string, firstname: string, lastname: string}[]>([]);
+    const [users, setUsers] = useState<{ id: string, username: string, firstname: string, lastname: string }[]>([]);
     const [hideUserList, setHideUserList] = useState<boolean>(false);
-    
+
     const category = useCategoryStore((state) => state.categories);
     const [SelectedCategoryId, setSelectedCategoryId] = useState<number>(-1);
     const [isFree, setIsFree] = useState<boolean | null>(null);
@@ -37,27 +37,32 @@ export default function EventSearchBox() {
             return;
         }
         fetchUsers(Info)
-        .then((response) => {
-            setUsers(response.data);
-        })
-        .catch((error) => {
-            console.error("Error fetching users: ", error);
-        })
+            .then((response) => {
+                setUsers(response.data);
+            })
+            .catch((error) => {
+                console.error("Error fetching users: ", error);
+            })
     }
 
     const getSearchEvents = () => {
-        if(searchValue.trim() === "") {
-            fetchEvents();
-            return;
-        }
         searchAndFilterEvents(searchBy, userId, searchValue, SelectedCategoryId, isFree, selectedType)
-        .then((response) => {
-            console.log("Search and filter response: ", response.data);
-            setEvents(response.data);
-        })
-        .catch((error) => {
-            console.error("Error searching events: ", error);
-        })
+            .then((response) => {
+                setEvents(response.data);
+            })
+            .catch((error) => {
+                console.error("Error searching events: ", error);
+            })
+    }
+
+    const handleReset = () => {
+        setSearchBy("Title");
+        setSearchValue("");
+        setUserId("");
+        setSelectedCategoryId(-1);
+        setIsFree(null);
+        setSelectedType("All Types");
+        fetchEvents();
     }
 
     return (
@@ -87,7 +92,6 @@ export default function EventSearchBox() {
                     </SelectGroup>
                 </SelectContent>
             </Select>
-            
             {/* Search Box */}
             <div className="relative">
                 <input
@@ -105,18 +109,22 @@ export default function EventSearchBox() {
                 />
                 {
                     !hideUserList && searchBy === "Organizer" && searchValue.trim() !== "" && (
-                        <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-10 px-2 py-1">
+                        <ul className="absolute top-full left-0 min-w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-10 px-2 py-1 flex flex-col gap-1">
                             {
                                 users.map((user) => (
                                     <li key={user.id}
-                                    className="p-1 hover:bg-gray-200 cursor-pointer border-b border-gray-300"
-                                    onClick={() => {
-                                        setUserId(user.id);
-                                        setSearchValue(user.username);
-                                        setHideUserList(true);
-                                    }}
+                                        className="p-1 hover:bg-gray-200 cursor-pointer rounded-md border border-gray-300 flex flex-row gap-1 items-center"
+                                        onClick={() => {
+                                            setUserId(user.id);
+                                            setSearchValue(user.username);
+                                            setHideUserList(true);
+                                        }}
                                     >
-                                        {user.firstname} {user.lastname} ({user.username})
+                                        <div className="flex w-10 h-10 rounded-full border border-black items-center justify-center" >{user.username[0].toUpperCase()}</div>
+                                        <div>
+                                            <div className="text-gray-500" >@{user.username}</div>
+                                            <div> - {user.firstname} {user.lastname}</div>
+                                        </div>
                                     </li>
                                 ))
 
@@ -125,7 +133,6 @@ export default function EventSearchBox() {
                     )
                 }
             </div>
-            
             {/* Filter by Category */}
             <Select
                 defaultValue={"All Categories"}
@@ -138,10 +145,10 @@ export default function EventSearchBox() {
                         <SelectLabel>Category</SelectLabel>
                         {
                             [
-                                {id: -1, name: "All Categories"},
+                                { id: -1, name: "All Categories" },
                                 ...category
                             ].map((option, index) => (
-                                <SelectItem key={index} value={option.name} onSelect={() => setSelectedCategoryId(option.id)}>
+                                <SelectItem key={index} value={option.name} onClick={() => setSelectedCategoryId(option.id)}>
                                     {option.name}
                                 </SelectItem>
                             ))
@@ -162,11 +169,11 @@ export default function EventSearchBox() {
                         <SelectLabel>Payment</SelectLabel>
                         {
                             [
-                                {name: "Free/Paid", value: null},
-                                {name: "Free", value: true},
-                                {name: "Paid", value: false}
+                                { name: "Free/Paid", value: null },
+                                { name: "Free", value: true },
+                                { name: "Paid", value: false }
                             ].map((option, index) => (
-                                <SelectItem key={index} value={option.name} onSelect={() => setIsFree(option.value)}>
+                                <SelectItem key={index} value={option.name} onClick={() => setIsFree(option.value)}>
                                     {option.name}
                                 </SelectItem>
                             ))
@@ -191,7 +198,7 @@ export default function EventSearchBox() {
                                 "Online",
                                 "Physical"
                             ].map((option, index) => (
-                                <SelectItem key={index} value={option} onSelect={() => setSelectedType(option)}>
+                                <SelectItem key={index} value={option} onClick={() => setSelectedType(option)}>
                                     {option}
                                 </SelectItem>
                             ))
@@ -199,12 +206,17 @@ export default function EventSearchBox() {
                     </SelectGroup>
                 </SelectContent>
             </Select>
-            
             <button
                 className="bg-teal-500 text-white px-2 py-1 rounded-md hover:bg-teal-600"
                 onClick={getSearchEvents}
             >
                 Get
+            </button>
+            <button
+                className="bg-yellow-500 text-black px-2 py-1 rounded-md hover:bg-yellow-600"
+                onClick={handleReset}
+            >
+                Reset
             </button>
         </div>
     )

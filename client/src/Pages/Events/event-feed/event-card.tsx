@@ -1,16 +1,16 @@
 import { Button } from "@/components/ui/button"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card"
 import type { EventCardType } from "./event-card-type"
 import { useNavigate } from "react-router-dom"
 
-export function EventCard({Item}: {Item: EventCardType}) {
+export function EventCard({ Item }: { Item: EventCardType }) {
     const navigate = useNavigate();
 
     return (
