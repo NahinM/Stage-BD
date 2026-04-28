@@ -1,6 +1,9 @@
 import { UserModel } from "../../models/user/user-model.js";
 import { UserRoleModel } from "../../models/user/user-role-model.js";
-import { verifyRefreshToken } from "../../middlewares/authentication/token.js";
+import {
+  verifyRefreshToken,
+  generateAccessToken,
+} from "../../middlewares/authentication/token.js";
 
 export const UserController = {
   search: async (req, res) => {
@@ -41,8 +44,25 @@ export const UserController = {
     if (!decoded) {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
+    const userRoles = await UserRoleModel.read(decoded.id)
+      .then((roles) => roles.map((r) => r.role))
+      .catch((err) => {
+        console.error("Error retrieving user roles: ", err);
+        return null;
+      });
+    const payload = {
+      id: decoded.id,
+      username: decoded.username,
+      roles: userRoles,
+    };
+    const accessToken = generateAccessToken(payload);
+    res.status(200).json({
+      message: "Refresh token is valid",
+      user: decoded,
+      roles: userRoles,
+      accessToken: accessToken,
+    });
     // Here you would typically generate a new access token
-    res.status(200).json({ message: "Refresh token is valid", user: decoded });
   },
   logout: async (req, res) => {
     res.clearCookie("refreshToken");

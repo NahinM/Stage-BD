@@ -1,5 +1,14 @@
 import jwt from "jsonwebtoken";
-import { jwtRefreshSecret } from "../../config/env-variables.js";
+import {
+  jwtRefreshSecret,
+  jwtAccessSecret,
+} from "../../config/env-variables.js";
+
+export const generateRefreshToken = (user) => {
+  return jwt.sign({ id: user.id, username: user.username }, jwtRefreshSecret, {
+    expiresIn: "7d",
+  });
+};
 
 export const verifyRefreshToken = async (token) => {
   return jwt.verify(token, jwtRefreshSecret, (err, decoded) => {
@@ -11,8 +20,22 @@ export const verifyRefreshToken = async (token) => {
   });
 };
 
-export const generateRefreshToken = (user) => {
-  return jwt.sign({ id: user.id, username: user.username }, jwtRefreshSecret, {
-    expiresIn: "7d",
+export const generateAccessToken = (user) => {
+  return jwt.sign(
+    { id: user.id, username: user.username, roles: user.roles },
+    jwtAccessSecret,
+    {
+      expiresIn: "15m",
+    },
+  );
+};
+
+export const verifyAccessToken = async (token) => {
+  return jwt.verify(token, jwtAccessSecret, (err, decoded) => {
+    if (err) {
+      console.error("Error verifying access token: ", err);
+      return null;
+    }
+    return decoded;
   });
 };

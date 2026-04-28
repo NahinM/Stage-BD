@@ -31,3 +31,15 @@ export const userLogout = async () => {
     console.error("Logout error:", error.response?.data?.message || error.message);
   });
 }
+
+export const refreshAccessToken = async () => {
+  axios.get("/api/user/refresh").then(response => {
+    console.log("Token refresh response:", response.data);
+    const { accessToken, roles } = response.data;
+    useUserStore.getState().setJwtToken(accessToken);
+    useUserStore.getState().setUserRoles(roles);
+  }).catch(error => {
+    console.error("Token refresh error:", error.response?.data?.message || error.message);
+    useUserStore.getState().clearUser();
+  });
+}
