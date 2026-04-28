@@ -92,6 +92,7 @@ export default function EventSearchBox() {
                     </SelectGroup>
                 </SelectContent>
             </Select>
+
             {/* Search Box */}
             <div className="relative">
                 <input
@@ -133,6 +134,7 @@ export default function EventSearchBox() {
                     )
                 }
             </div>
+
             {/* Filter by Category */}
             <Select
                 defaultValue={"All Categories"}
@@ -206,6 +208,7 @@ export default function EventSearchBox() {
                     </SelectGroup>
                 </SelectContent>
             </Select>
+
             <button
                 className="bg-teal-500 text-white px-2 py-1 rounded-md hover:bg-teal-600"
                 onClick={getSearchEvents}
