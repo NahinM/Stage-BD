@@ -1,3 +1,4 @@
+import { authorize } from "../../middlewares/authentication/auth.js";
 import { UserModel } from "../../models/user/user-model.js";
 import { UserRoleModel } from "../../models/user/user-role-model.js";
 import {
@@ -67,5 +68,23 @@ export const UserController = {
   logout: async (req, res) => {
     res.clearCookie("refreshToken");
     res.status(200).json({ message: "Logged out successfully" });
+  },
+  get: async (req, res) => {
+    const authResult = await authorize(req.headers);
+    if (!authResult) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userID = authResult.id;
+    if (!userID) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    UserModel.read({ id: userID })
+      .then((data) => {
+        res.status(200).json(data[0]);
+      })
+      .catch((err) => {
+        console.error("Error retrieving user: ", err);
+        res.status(500).json({ message: "Error retrieving user" });
+      });
   },
 };

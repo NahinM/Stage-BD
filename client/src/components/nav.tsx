@@ -1,15 +1,15 @@
 import { Link } from "react-router-dom";
-import { useUserStore } from "@/store/User/user";
+import { useUserStore, userLogout, refreshUserIfNeeded } from "@/store/User/user";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { toast } from "sonner";
+import { useEffect } from "react";
 
 interface Pages {
     name: string;
@@ -19,11 +19,11 @@ interface Pages {
 export default function Nav({ pages }: { pages: Pages[] }) {
 
     const user = useUserStore((state) => state.user);
-
-    const logout = () => {
-        useUserStore.getState().clearUser();
-        toast.success("Logged out successfully.");
-    }
+    useEffect(() => {
+        (async () => {
+            await refreshUserIfNeeded();
+        })();
+    }, [])
 
     return (
         <nav className="flex flex-row fixed top-0 left-0 right-0 z-50 px-4 py-3 backdrop-blur-sm items-center">
@@ -37,7 +37,7 @@ export default function Nav({ pages }: { pages: Pages[] }) {
                         key={page.href}
                     >
                         <Link to={page.href}
-                        className="font-medium text-slate-700 hover:text-slate-900 px-3 py-1 rounded-md border border-slate-300 hover:border-slate-500 transition-colors"
+                            className="font-medium text-slate-700 hover:text-slate-900 px-3 py-1 rounded-md border border-slate-300 hover:border-slate-500 transition-colors"
                         >{page.name}</Link>
                     </li>
                 ))}
@@ -62,7 +62,7 @@ export default function Nav({ pages }: { pages: Pages[] }) {
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem>
-                                            <button onClick={logout}>Logout</button>
+                                            <button onClick={userLogout}>Logout</button>
                                         </DropdownMenuItem>
                                     </DropdownMenuGroup>
                                 </DropdownMenuContent>
@@ -70,8 +70,8 @@ export default function Nav({ pages }: { pages: Pages[] }) {
                         </div>
 
                     ) : (
-                        <Link to="/signin" 
-                        className="font-medium text-slate-700 hover:text-slate-900 px-3 py-1 rounded-md border border-slate-300 hover:border-slate-500 transition-colors"
+                        <Link to="/signin"
+                            className="font-medium text-slate-700 hover:text-slate-900 px-3 py-1 rounded-md border border-slate-300 hover:border-slate-500 transition-colors"
                         >Sign in</Link>
                     )}
                 </li>

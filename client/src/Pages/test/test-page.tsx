@@ -1,8 +1,10 @@
 import axios from "axios"
 import { userLogout } from "@/store/User/user";
+import { useAuth } from "@/authentication/auth";
+
 export default function TestPage() {
     const testAPI = async () => {
-        await axios.get("/api/user/refresh")
+        await axios.get("/api/user/refreshToken")
             .then(response => {
                 console.log("API response:", response.data);
             })
@@ -26,6 +28,12 @@ export default function TestPage() {
                     onClick={userLogout}
                 >
                     Logout
+                </button>
+                <button
+                    className="mt-4 rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                    onClick={() => useAuth(() => axios.get("http://localhost:3000/api/user"))}
+                >
+                    get user
                 </button>
             </div>
         </div>
