@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useUserStore } from "@/store/User/user";
 import { updateUser } from "./api";
+
+
 export function BioSection() {
     const { user } = useUserStore();
     const [isEditing, setIsEditing] = useState(false);
@@ -11,14 +13,12 @@ export function BioSection() {
         setIsEditing(false);
     };
 
-    const saveEdit = async () => {
-        if (!user) return;
-        try {
-            await updateUser({ bio: newBio });
+    const saveEdit = () => {
+        updateUser({ bio: newBio }).then((response) => {
             setIsEditing(false);
-        } catch (error) {
-            console.error("Error updating user bio:", error);
-        }
+        }).catch((error) => {
+            console.error("Error updating bio:", error.response?.data?.message || error.message);
+        });
     };
 
     return (

@@ -1,22 +1,22 @@
 import { useUserStore } from "@/store/User/user";
 import apiClient from "@/store/api-client";
 
-export const updateUser = async (details: any) => {
+export const updateUser = (details: any) => {
     console.log("Updating user with details:", details);
-    try {
-        const { user, jwtToken } = useUserStore();
-        if (!user) {
-            throw new Error("User not logged in");
-        }
-        const response = await apiClient.put(`/api/user`, details, {
-            headers: {
-                Authorization: `Bearer ${jwtToken}`,
-            },
-        });
+    const user = useUserStore.getState().user;
+    const jwtToken = useUserStore.getState().jwtToken;
+    if (!user) {
+        throw new Error("User not logged in");
+    }
+    return apiClient.put(`/api/user`, details, {
+        headers: {
+            Authorization: `Bearer ${jwtToken}`,
+        },
+    }).then((response) => {
         console.log("User details update response:", response.data);
         return response.data;
-    } catch (error) {
-        console.error("Error updating user details:", error);
+    }).catch((error) => {
+        console.error("Error updating user details:", error.response?.data?.message || error.message);
         throw error;
-    }
+    });
 }
