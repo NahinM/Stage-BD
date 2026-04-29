@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUserStore } from "@/store/User/user";
+import { updateUser } from "./api";
 import {
     Select,
     SelectContent,
@@ -42,11 +43,32 @@ export default function OtherDetailSection() {
         setCity(user?.city || "");
         setIsEditing(false);
     }
+
+    const saveEdit = () => {
+        const details = { birthyear: birthyear, gender: gender, avatar_url: avatarUrl, city: city };
+        console.log("Saving details:", details);
+        updateUser(details);
+        // Here you would typically call an API to save the changes
+        setIsEditing(false);
+    }
+
+    const toggleEdit = () => {
+        if (isEditing) {
+            // Here you would typically call an API to save the changes
+            saveEdit();
+        } else {
+            setBirthyear(user?.birthyear || new Date().getFullYear());
+            setGender(user?.gender || "");
+            setAvatarUrl(user?.avatar_url || "");
+            setCity(user?.city || "");
+        }
+        setIsEditing(!isEditing);
+    }
     return (
         <section className="relative w-full border shadow-md p-1 mt-2 bg-white rounded-lg">
             <div className="flex gap-1 absolute top-2 right-2">
                 <button
-                    onClick={() => setIsEditing(!isEditing)}
+                    onClick={toggleEdit}
                     className="bg-green-500 text-white px-3 py-1 rounded-md"
                 >
                     {isEditing ? "Save" : "Edit"}
@@ -60,8 +82,8 @@ export default function OtherDetailSection() {
                     </button>}
             </div>
             <h1 className="text-xl font-bold py-2 px-4">Other Details</h1>
-            <div className="px-4 pb-4 space-y-3">
-                <div>
+            <div className="px-4 pb-4 space-y-3 space-x-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                <div className="border-b border-gray-400">
                     <label className="block text-sm font-medium mb-1">Birth Year</label>
                     {isEditing ? (
                         <input
@@ -71,10 +93,10 @@ export default function OtherDetailSection() {
                             onChange={(e) => setBirthyear(Number(e.target.value))}
                         />
                     ) : (
-                        <p className="border rounded-md p-2">{birthyear || "--N/A--"}</p>
+                        <p className="rounded-md p-2">{birthyear || "--N/A--"}</p>
                     )}
                 </div>
-                <div>
+                <div className="border-b border-gray-400">
                     <label className="block text-sm font-medium mb-1">Gender</label>
                     {isEditing ? (
                         <Select value={gender} onValueChange={setGender}>
@@ -92,10 +114,10 @@ export default function OtherDetailSection() {
                             </SelectContent>
                         </Select>
                     ) : (
-                        <p className="border rounded-md p-2">{gender || "--N/A--"}</p>
+                        <p className="rounded-md p-2">{gender || "--N/A--"}</p>
                     )}
                 </div>
-                <div>
+                <div className="border-b border-gray-400">
                     <label className="block text-sm font-medium mb-1">City</label>
                     {isEditing ? (
                         <Select value={city} onValueChange={setCity}>
@@ -113,7 +135,7 @@ export default function OtherDetailSection() {
                             </SelectContent>
                         </Select>
                     ) : (
-                        <p className="border rounded-md p-2">{city || "--N/A--"}</p>
+                        <p className="rounded-md p-2">{city || "--N/A--"}</p>
                     )}
                 </div>
                 {isEditing && (

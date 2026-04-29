@@ -5,6 +5,7 @@ import { Mail, Phone } from "lucide-react";
 
 import { BioSection } from "./bio-section";
 import OtherDetailSection from "./other-detail-section";
+import { updateUser } from "./api";
 
 export default function Profile() {
     const { user, userRoles } = useUserStore();
@@ -16,6 +17,21 @@ export default function Profile() {
         setLastname(user?.lastname || "");
         setIsEditing(false);
     };
+    const saveEdit = () => {
+        const details = { firstname, lastname };
+        console.log("Saving user details:", details);
+        updateUser(details);
+        setIsEditing(false);
+    }
+    const toggelEdit = () => {
+        if (isEditing) {
+            saveEdit();
+        } else {
+            setFirstname(user?.firstname || "");
+            setLastname(user?.lastname || "");
+        }
+        setIsEditing(!isEditing);
+    }
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 p-6">
             <Nav pages={[{ name: "Home", href: "/" }, { name: "feed", href: "/feed" }]} />
@@ -24,7 +40,7 @@ export default function Profile() {
                 <section className="relative flex flex-row items-center bg-white rounded-lg shadow-md p-6">
                     <div className="flex gap-1 absolute top-2 right-2">
                         <button
-                            onClick={() => setIsEditing(!isEditing)}
+                            onClick={toggelEdit}
                             className="bg-green-500 text-white px-3 py-1 rounded-md"
                         >
                             {isEditing ? "Save" : "Edit"}
