@@ -61,13 +61,19 @@ export const refreshAccessTokenIfNeeded = async () => {
   }
 }
 
+export const refreshUser = async () => {
+  try {
+    const data: User | null = await useAuth(() => axios.get("http://localhost:3000/api/user"));
+    console.log("User refresh response:", data);
+    if (data) {
+      useUserStore.getState().setUser(data);
+    }
+  } catch (error) {
+    console.error("Error refreshing user data:", error);
+  }
+}
+
 export const refreshUserIfNeeded = async () => {
   if (useUserStore.getState().user) return; // User data is already available, no need to refresh
-  const data: User | null = await useAuth(() => axios.get("http://localhost:3000/api/user"));
-  console.log("User refresh response:", data);
-  if (data) {
-    useUserStore.getState().setUser(data);
-  } else {
-    console.error("Failed to refresh user data");
-  }
+  await refreshUser();
 }
