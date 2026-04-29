@@ -18,11 +18,20 @@ export function BioSection() {
         setIsEditing(false);
     };
 
+    const toggelEdit = () => {
+        if (isEditing) {
+            saveEdit();
+        } else {
+            setNewBio(user?.bio || "");
+        }
+        setIsEditing(!isEditing);
+    }
+
     return (
         <section className="relative w-full border shadow-md p-1 mt-2 bg-white rounded-lg">
             <div className="flex gap-1 absolute top-2 right-2">
                 <button
-                    onClick={() => { setIsEditing(!isEditing); if (isEditing) saveEdit(); }}
+                    onClick={toggelEdit}
                     className="bg-green-500 text-white px-3 py-1 rounded-md"
                 >
                     {isEditing ? "Save" : "Edit"}
