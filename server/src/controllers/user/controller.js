@@ -88,9 +88,9 @@ export const UserController = {
       });
   },
   update: async (req, res) => {
-    console.log("Received request to update user with data:", req.body);
+    // console.log("Received request to update user with data:", req.body);
     const authResult = await authorize(req.headers);
-    console.log("Authorization successful, auth result:", authResult);
+    // console.log("Authorization successful, auth result:", authResult);
     if (!authResult) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -98,24 +98,19 @@ export const UserController = {
     if (!userID) {
       return res.status(400).json({ message: "User ID is required" });
     }
-    console.log("Updating user with ID:", userID, "and data:", req.body);
-    res
-      .status(200)
-      .json({
-        message: "User update endpoint is working",
-        userID,
-        updateData: req.body,
+    // console.log("Updating user with ID:", userID, "and data:", req.body);
+    UserModel.update(userID, req.body)
+      .then((data) => {
+        // console.log("User updated successfully:", data);
+        res
+          .status(200)
+          .json({ message: "User updated successfully", data: data[0] });
+      })
+      .catch((err) => {
+        console.error("Error updating user: ", err);
+        res
+          .status(500)
+          .json({ message: "Error updating user", error: err.message });
       });
-    // UserModel.update(userID, req.body)
-    //   .then((data) => {
-    //     console.log("User updated successfully:", data);
-    //     res.status(200).json({ message: "User updated successfully", data });
-    //   })
-    //   .catch((err) => {
-    //     console.error("Error updating user: ", err);
-    //     res
-    //       .status(500)
-    //       .json({ message: "Error updating user", error: err.message });
-    //   });
   },
 };

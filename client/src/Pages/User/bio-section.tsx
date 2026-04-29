@@ -14,11 +14,8 @@ export function BioSection() {
     };
 
     const saveEdit = () => {
-        updateUser({ bio: newBio }).then((response) => {
-            setIsEditing(false);
-        }).catch((error) => {
-            console.error("Error updating bio:", error.response?.data?.message || error.message);
-        });
+        updateUser({ bio: newBio });
+        setIsEditing(false);
     };
 
     return (

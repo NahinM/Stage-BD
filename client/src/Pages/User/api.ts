@@ -8,13 +8,13 @@ export const updateUser = (details: any) => {
     if (!user) {
         throw new Error("User not logged in");
     }
-    return apiClient.put(`/api/user`, details, {
+    apiClient.put(`/api/user`, details, {
         headers: {
             Authorization: `Bearer ${jwtToken}`,
         },
     }).then((response) => {
         console.log("User details update response:", response.data);
-        return response.data;
+        useUserStore.getState().setUser(response.data.data);
     }).catch((error) => {
         console.error("Error updating user details:", error.response?.data?.message || error.message);
         throw error;
