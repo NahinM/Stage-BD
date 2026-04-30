@@ -63,7 +63,6 @@ export const UserController = {
       roles: userRoles,
       accessToken: accessToken,
     });
-    // Here you would typically generate a new access token
   },
   logout: async (req, res) => {
     res.clearCookie("refreshToken");
