@@ -8,12 +8,12 @@ const _api = axios.create({
 });
 
 _api.interceptors.request.use(
-    async responce => {
+    async response => {
         const token = await getAccessToken();
         if (token) {
-            responce.headers['Authorization'] = `Bearer ${token}`;
+            response.headers['Authorization'] = `Bearer ${token}`;
         }
-        return responce;
+        return response;
     }
 );
 
@@ -30,3 +30,5 @@ _api.interceptors.response.use(
         return response;
     }
 );
+
+export default _api;
