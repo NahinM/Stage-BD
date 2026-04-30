@@ -71,3 +71,11 @@ export const refreshUserIfNeeded = async () => {
     console.error("Failed to refresh user data");
   }
 }
+
+export const getAccessToken = async () => {
+  const token = useUserStore.getState().jwtToken;
+  if (!token) {
+    return await refreshAccessToken();
+  }
+  return token;
+}
