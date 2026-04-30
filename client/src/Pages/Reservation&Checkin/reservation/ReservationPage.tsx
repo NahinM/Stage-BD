@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { fetchEventDetails, applyPromo, makeReservation } from "./api";
-
+import { useUserStore, userLogout, refreshUserIfNeeded } from "@/store/User/user";
 export default function ReservationPage() {
     const { eventId } = useParams();
     const navigate = useNavigate();
@@ -34,6 +34,12 @@ export default function ReservationPage() {
             .catch(() => toast.error("Failed to load event"))
             .finally(() => setLoading(false));
     }, [eventId]);
+
+    useEffect(() => {
+        (async () => {
+            await refreshUserIfNeeded();
+        })();
+    }, []);
 
     const handleApplyPromo = () => {
         if (!promoInput.trim()) return;
