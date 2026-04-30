@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { type User } from "../../types/user-type";
 import axios from "axios";
-import { useAuth } from "@/authentication/auth";
+import _api from "@/authentication/private-api";
 
 interface UserState {
   user: User | null;
@@ -63,7 +63,8 @@ export const refreshAccessTokenIfNeeded = async () => {
 
 export const refreshUser = async () => {
   try {
-    const data: User | null = await useAuth(() => axios.get("http://localhost:3000/api/user"));
+    const response = await _api.get("/user");
+    const data = response.data;
     console.log("User refresh response:", data);
     if (data) {
       useUserStore.getState().setUser(data);

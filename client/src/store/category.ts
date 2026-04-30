@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import api from "@/authentication/public-api";
 
 interface Category {
     id: number;
@@ -14,7 +14,7 @@ interface CategoryState {
 export const useCategoryStore = create<CategoryState>((set) => ({
     categories: [],
     fetchCategories: async () => {
-        axios.get("/api/event/categories").then((response) => response.data).then((data) => {
+        api.get("/event/categories").then((response) => response.data).then((data) => {
             set({ categories: data });
         }).catch((error) => {
             console.error("Failed to fetch categories:", error);
