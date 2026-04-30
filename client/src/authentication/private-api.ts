@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAccessToken, refreshAccessToken } from "@/store/User/user";
+import { getAccessToken } from "@/store/User/user";
 
 const _api = axios.create({
     baseURL: "http://localhost:3000/api",
@@ -12,20 +12,6 @@ _api.interceptors.request.use(
         const token = await getAccessToken();
         if (token) {
             response.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return response;
-    }
-);
-
-_api.interceptors.response.use(
-    async response => {
-        if (response.status === 401) {
-            console.log("refreshing token...");
-            const newToken = await refreshAccessToken();
-            if (newToken) {
-                response.config.headers['Authorization'] = `Bearer ${newToken}`;
-                return axios(response.config);
-            }
         }
         return response;
     }
