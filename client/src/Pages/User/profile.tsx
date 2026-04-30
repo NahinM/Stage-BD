@@ -1,107 +1,106 @@
 import { useUserStore } from "@/store/User/user";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/nav";
+import { useState } from "react";
+import { Mail, Phone } from "lucide-react";
+
+import { BioSection } from "./bio-section";
+import OtherDetailSection from "./other-detail-section";
+import { updateUser } from "./api";
 
 export default function Profile() {
-    const { user } = useUserStore();
-
+    const { user, userRoles } = useUserStore();
+    const [isEditing, setIsEditing] = useState(false);
+    const [firstname, setFirstname] = useState(user?.firstname || "");
+    const [lastname, setLastname] = useState(user?.lastname || "");
+    const cencelEdit = () => {
+        setFirstname(user?.firstname || "");
+        setLastname(user?.lastname || "");
+        setIsEditing(false);
+    };
+    const saveEdit = () => {
+        const details = { firstname, lastname };
+        console.log("Saving user details:", details);
+        updateUser(details);
+        setIsEditing(false);
+    }
+    const toggelEdit = () => {
+        if (isEditing) {
+            saveEdit();
+        } else {
+            setFirstname(user?.firstname || "");
+            setLastname(user?.lastname || "");
+        }
+        setIsEditing(!isEditing);
+    }
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 p-6">
-            <Nav pages={[{ name: "Home", href: "/" },{ name: "feed", href: "/feed" }]} />
+            <Nav pages={[{ name: "Home", href: "/" }, { name: "feed", href: "/feed" }]} />
             <br /><br />
-            <div className="max-w-4xl mx-auto space-y-8">
-                {/* Welcome Header */}
-                <div className="space-y-2">
-                    <h1 className="text-4xl font-bold text-foreground">Welcome to Your Profile</h1>
-                    <p className="text-muted-foreground text-lg">
-                        {user ? `Nice to see you again, ${user.firstname}!` : "Please sign in to continue"}
-                    </p>
-                </div>
-
-                {/* User Profile Card */}
-                {user && (
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {/* Personal Information */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-xl">Personal Information</CardTitle>
-                                <CardDescription>Your account details</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Full Name</p>
-                                    <p className="text-lg font-semibold text-foreground">
-                                        {user.firstname} {user.lastname}
-                                    </p>
-                                </div>
-                                <div className="border-t pt-4">
-                                    <p className="text-sm font-medium text-muted-foreground">Email</p>
-                                    <p className="text-lg text-foreground break-all">{user.email}</p>
-                                </div>
-                                <div className="border-t pt-4">
-                                    <p className="text-sm font-medium text-muted-foreground">Username</p>
-                                    <p className="text-lg text-foreground">@{user.username}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Additional Information */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-xl">Additional Info</CardTitle>
-                                <CardDescription>More about you</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Birth Year</p>
-                                    <p className="text-lg font-semibold text-foreground">{user.birthyear}</p>
-                                </div>
-                                <div className="border-t pt-4">
-                                    <p className="text-sm font-medium text-muted-foreground">Gender</p>
-                                    <p className="text-lg text-foreground capitalize">{user.gender}</p>
-                                </div>
-                                <div className="border-t pt-4">
-                                    <p className="text-sm font-medium text-muted-foreground">City</p>
-                                    <p className="text-lg text-foreground">{user.city}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
+            <div className="max-w-6xl mx-auto">
+                <section className="relative flex flex-row items-center bg-white rounded-lg shadow-md p-6">
+                    <div className="flex gap-1 absolute top-2 right-2">
+                        <button
+                            onClick={toggelEdit}
+                            className="bg-green-500 text-white px-3 py-1 rounded-md"
+                        >
+                            {isEditing ? "Save" : "Edit"}
+                        </button>
+                        {isEditing &&
+                            <button
+                                className="bg-red-500 text-white px-3 py-1 rounded-md"
+                                onClick={cencelEdit}
+                            >
+                                Cancel
+                            </button>}
                     </div>
-                )}
-
-                {/* Bio Section */}
-                {user && user.bio && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-xl">Bio</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-foreground leading-relaxed">{user.bio}</p>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Roles Badge */}
-                {user && user.roles && user.roles.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-xl">Assigned Roles</CardTitle>
-                            <CardDescription>Your permissions and access levels</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-wrap gap-2">
-                                {user.roles.map((role) => (
-                                    <div
-                                        key={role}
-                                        className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20"
-                                    >
-                                        {role}
-                                    </div>
-                                ))}
+                    <div className="flex items-center justify-start">
+                        <div className="flex flex-col items-center justify-center">
+                            <div className="text-4xl bg-sky-300 rounded-full w-30 h-30 flex items-center justify-center">
+                                {user?.username[0].toUpperCase()}
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
+                            <div className="text-lg p-2">@{user?.username}</div>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-start justify-center pl-6 gap-2">
+                        {!isEditing && <h1 className="text-3xl font-bold"> - {user?.firstname} {user?.lastname}</h1>}
+                        {isEditing && (
+                            <div className="flex flex-row gap-2">
+                                <input
+                                    type="text"
+                                    value={firstname}
+                                    onChange={(e) => setFirstname(e.target.value)}
+                                    className="border rounded-md p-2"
+                                />
+                                <input
+                                    type="text"
+                                    value={lastname}
+                                    onChange={(e) => setLastname(e.target.value)}
+                                    className="border rounded-md p-2"
+                                />
+                            </div>
+                        )}
+                        <div className="flex flex-row items-center gap-2">
+                            <Mail />
+                            <p className="text-gray-600">{user?.email}</p>
+                        </div>
+                        <div className="flex flex-row items-center gap-2">
+                            <Phone />
+                            <p className="text-gray-600">{user?.phone || "--N/A--"}</p>
+                        </div>
+                        <div className="flex flex-row gap-1 items-center">
+                            Roles--
+                            {
+                                userRoles?.map((role) => (
+                                    <span key={role} className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                        {role}
+                                    </span>
+                                ))
+                            }
+                        </div>
+                    </div>
+                </section>
+                <BioSection />
+                <OtherDetailSection />
             </div>
         </div>
     );
