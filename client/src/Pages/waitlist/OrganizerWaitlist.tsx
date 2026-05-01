@@ -45,7 +45,7 @@ export default function OrganizerWaitlist() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-4xl">
         <button
-          onClick={() => navigate("/organizer/events")}
+          onClick={() => navigate("/organizer")}
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-4"
         >
           <ArrowLeft size={14} /> Back to events

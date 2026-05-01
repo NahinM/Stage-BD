@@ -91,13 +91,23 @@ export const getUserReservations = async (userId) => {
 };
 
 export const cancelReservation = async (reservationId, userId) => {
-    const { data, error } = await supabase
-        .from("reservation")
-        .update({ status: "cancelled" })
-        .eq("id", reservationId)
-        .eq("user_id", userId)
-        .select()
-        .single();
-    if (error) { console.error("Error cancelling reservation:", error); return null; }
-    return data;
+  const { data, error } = await supabase
+    .from("reservation")
+    .update({ status: "cancelled" })
+    .eq("id", reservationId)
+    .eq("user_id", userId)
+    .select("id, event_id, ticket_slot_id")
+    .single();
+
+  if (error) { console.error("Error cancelling reservation:", error); return null; }
+
+  // decrement seats_reserved on event
+  await supabase.rpc("decrement_seats_reserved", { event_id: data.event_id });
+
+  // decrement sold on ticket_slot if slot exists
+  if (data.ticket_slot_id) {
+    await supabase.rpc("decrement_slot_sold", { slot_id: data.ticket_slot_id });
+  }
+
+  return data;
 };

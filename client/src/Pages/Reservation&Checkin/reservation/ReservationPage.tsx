@@ -73,11 +73,13 @@ export default function ReservationPage() {
     };
 
     const handleReserve = () => {
-        if (!selectedSlot) return toast.error("Please select a ticket type");
+        if (slots.length > 0 && !selectedSlot)
+            return toast.error("Please select a ticket type");
+
         setSubmitting(true);
         makeReservation({
             eventId: eventId!,
-            slotId: selectedSlot.id,
+            slotId: selectedSlot?.id ?? null,
             promoCodeId: appliedPromo?.id,
             finalPrice,
         })
@@ -124,6 +126,7 @@ export default function ReservationPage() {
                                     {event.venue.name}, {event.venue.city}
                                 </span>
                             )}
+
                             <span className="flex items-center gap-1">
                                 <Users size={15} />
                                 {seatsLeft} seats left
