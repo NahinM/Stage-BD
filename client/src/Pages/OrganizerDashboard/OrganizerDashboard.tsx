@@ -11,6 +11,7 @@ import EventsTab from "./events/events-tab";
 import TicketingTab from "./ticketing-tab";
 import EngagementTab from "./engagement-tab";
 import ArtistGrowthTab from "./artist-growth-tab";
+import Nav from "@/components/nav";
 
 export default function OrganizerDashboard() {
   const [loading] = useState(false);
@@ -49,6 +50,11 @@ export default function OrganizerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <Nav pages={[
+        { name: "Home", href: "/" },
+        { name: "Feed", href: "/feed" }
+      ]} />
+      <br /><br />
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
