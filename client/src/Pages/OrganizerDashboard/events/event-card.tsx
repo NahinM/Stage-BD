@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/dialog";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import EventEdit from "./event-edit";
 
 export interface EventItem {
     id: string;
@@ -52,17 +52,17 @@ export default function EventCard({ event }: { event: EventItem }) {
                     <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-green-700 text-white rounded-l-md hover:bg-green-800">
                         <Edit size={15} /> Edit
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-3xl overflow-y-auto h-9/10">
+                    <DialogContent className="sm:max-w-5xl overflow-y-auto h-9/10">
                         <div>
-                            <h1>Edit Event</h1>
+                            <EventEdit event_id={event.id} />
                         </div>
                     </DialogContent>
                 </Dialog>
                 <Dialog>
                     <DialogTrigger
-                        className="w-full flex items-center justify-center gap-1 py-1 bg-yellow-700 text-white hover:bg-yellow-800 shadow-md"
+                        className="w-full flex items-center justify-center gap-1 py-1 px-1 bg-yellow-700 text-white hover:bg-yellow-800 shadow-md"
                     >
-                        <Link to={`/organizer/waitlist/${event.id}`}>Wait List</Link>
+                        <Link to={`/organizer/waitlist/${event.id}`}> <span className="flex flex-row items-center gap-1"><Users size={14} /> Wait List</span></Link>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-3xl overflow-y-auto h-9/10">
                         <div>
