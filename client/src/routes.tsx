@@ -21,7 +21,7 @@ import MyReservations from "./Pages/Reservation&Checkin/my-reservations/MyReserv
 import CheckinDashboard from "./Pages/Reservation&Checkin/checkin/CheckinDashboard.tsx";
 import ScannerPage from "./Pages/Reservation&Checkin/checkin/ScannerPage.tsx";
 import Profile from "./Pages/User/profile.tsx";
-import OrganizerDashboard from "./Pages/Reservation&Checkin/OrganizerDashboard/OrganizerDashboard.tsx";
+import OrganizerDashboard from "./Pages/OrganizerDashboard/OrganizerDashboard.tsx";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -106,7 +106,7 @@ export const router = createBrowserRouter([
   },
 
   {
-  path: "/organizer",
-  element: <OrganizerDashboard />,
-}
+    path: "/organizer",
+    element: <OrganizerDashboard />,
+  }
 ])
