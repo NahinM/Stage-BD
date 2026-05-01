@@ -48,6 +48,12 @@ export default function ArtistProfile() {
                         params: { follower_id: currentUserId, followed_id: artistId }
                     });
                     setIsFollowing(statusRes.data.isFollowing);
+
+                    // Fetch user's current vote
+                    const voteRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/vote-status`, {
+                        params: { voter_id: currentUserId }
+                    });
+                    setUserVote(voteRes.data.vote_type);
                 }
 
             } catch (err) {
@@ -60,18 +66,42 @@ export default function ArtistProfile() {
     }, [artistId, currentUserId]);
 
     const handleVote = async (type: 1 | -1) => {
-        if (userVote === type) return;
+        if (!currentUserId || currentUserId === "00000000-0000-0000-0000-000000000000") {
+            alert("Please login to vote!");
+            return;
+        }
+
         const prevVote = userVote;
-        setUserVote(type);
-        setVoteScore(prev => prev + (type === 1 ? (prevVote === -1 ? 2 : 1) : (prevVote === 1 ? -2 : -1)));
+        let newVote: number | null = type;
+        let scoreChange = 0;
+
+        if (prevVote === type) {
+            // Unvote (clicking same button)
+            newVote = null;
+            scoreChange = -type;
+        } else if (prevVote !== null) {
+            // Cancel opposite vote (clicking Up when Down, or Down when Up)
+            // Moving from -1 to 0 (change of +1) or 1 to 0 (change of -1)
+            newVote = null;
+            scoreChange = type;
+        } else {
+            // New vote (moving from 0 to 1 or -1)
+            newVote = type;
+            scoreChange = type;
+        }
+
+        setUserVote(newVote);
+        setVoteScore(prev => prev + scoreChange);
 
         try {
             await axios.post(`http://localhost:3000/api/artist/${artistId}/vote`, {
                 voter_id: currentUserId,
-                vote_type: type
+                vote_type: newVote === null ? 0 : newVote
             });
-        } catch {
-            setUserVote(prevVote); // rollback on fail
+        } catch (err) {
+            console.error("Voting failed", err);
+            setUserVote(prevVote);
+            setVoteScore(prev => prev - scoreChange);
         }
     };
 

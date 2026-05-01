@@ -2,7 +2,7 @@ import { supabase } from "../../config/database.js";
 
 // Fetch Contest details
 export const getContest = async (contestId) => {
-    const { data, error } = await supabase.from('contest').select('*').eq('id', contestId).single();
+    const { data, error } = await supabase.from('contest').select('*').eq('id', `${contestId}`).single();
     if (error) throw error;
     return data;
 };
@@ -19,7 +19,7 @@ export const getContestLeaderboard = async (contestId) => {
     const { data, error } = await supabase
         .from('contest_entry')
         .select('*, user:user_id (username, avatar_url, firstname)')
-        .eq('contest_id', contestId)
+        .eq('contest_id', `${contestId}`)
         .order('vote_score', { ascending: false });
     if (error) throw error;
     return data;
@@ -37,7 +37,7 @@ export const castVote = async (entryId, voterId, voteType) => {
     const { data: votes, error: votesError } = await supabase
         .from('contest_vote')
         .select('vote_type')
-        .eq('entry_id', entryId);
+        .eq('entry_id', `${entryId}`);
     if (votesError) throw votesError;
 
     const newScore = votes.reduce((acc, curr) => acc + curr.vote_type, 0);
@@ -46,10 +46,10 @@ export const castVote = async (entryId, voterId, voteType) => {
     const { data: entryData, error: updateError } = await supabase
         .from('contest_entry')
         .update({ vote_score: newScore })
-        .eq('id', entryId)
+        .eq('id', `${entryId}`)
         .select()
         .single();
-        
+
     if (updateError) throw updateError;
     return entryData;
 };

@@ -53,6 +53,9 @@ export const getContestById = async (req, res) => {
         const data = await contestsModel.getContest(contest_id);
         res.status(200).send({ message: "Contest fetched.", data });
     } catch (err) {
+        if (err.code === 'PGRST116') {
+            return res.status(404).send({ message: "Contest not found." });
+        }
         console.error(err);
         res.status(500).send({ message: "Failed to fetch contest." });
     }

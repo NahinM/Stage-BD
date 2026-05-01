@@ -1,5 +1,20 @@
 import * as artistModel from '../../models/engagement/artist.js';
 
+export const getArtistVoteStatus = async (req, res) => {
+    const { artist_id } = req.params;
+    const { voter_id } = req.query;
+
+    if (!voter_id) return res.json({ vote_type: null });
+
+    try {
+        const { vote_type } = await artistModel.getVoteStatus(artist_id, voter_id);
+        res.json({ vote_type });
+    } catch (error) {
+        console.error("Error fetching vote status", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 export const castArtistVote = async (req, res) => {
     const { artist_id } = req.params;
     const { voter_id, vote_type } = req.body;
@@ -34,6 +49,9 @@ export const getArtistProfile = async (req, res) => {
         const data = await artistModel.getArtistDetails(artist_id);
         res.status(200).send({ message: "Artist profile fetched.", data });
     } catch (err) {
+        if (err.code === 'PGRST116') {
+            return res.status(404).send({ message: "Artist not found." });
+        }
         console.error(err);
         res.status(500).send({ message: "Failed to fetch artist profile." });
     }
