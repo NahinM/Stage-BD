@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/dialog";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export interface EventItem {
     id: string;
@@ -57,8 +59,10 @@ export default function EventCard({ event }: { event: EventItem }) {
                     </DialogContent>
                 </Dialog>
                 <Dialog>
-                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-yellow-700 text-white hover:bg-yellow-800 shadow-md">
-                        <Users size={14} /> Wait List
+                    <DialogTrigger
+                        className="w-full flex items-center justify-center gap-1 py-1 bg-yellow-700 text-white hover:bg-yellow-800 shadow-md"
+                    >
+                        <Link to={`/organizer/waitlist/${event.id}`}>Wait List</Link>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-3xl overflow-y-auto h-9/10">
                         <div>
