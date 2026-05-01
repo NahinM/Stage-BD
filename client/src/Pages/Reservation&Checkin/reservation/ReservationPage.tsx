@@ -6,6 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { fetchEventDetails, applyPromo, makeReservation } from "./api";
 import { useUserStore, userLogout, refreshUserIfNeeded } from "@/store/User/user";
+import { joinWaitlist, getWaitlistPosition } from "@/Pages/waitlist/api";
 export default function ReservationPage() {
     const { eventId } = useParams();
     const navigate = useNavigate();
@@ -17,7 +18,8 @@ export default function ReservationPage() {
     const [appliedPromo, setAppliedPromo] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-
+    const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
+    const [waitlistLoading, setWaitlistLoading] = useState(false);
     const seatsLeft = event ? event.seat_limit - event.seats_reserved : 0;
     const basePrice = selectedSlot?.price ?? event?.price ?? 0;
     const discount = appliedPromo ? (basePrice * appliedPromo.discount_percent) / 100 : 0;
@@ -34,13 +36,32 @@ export default function ReservationPage() {
             .catch(() => toast.error("Failed to load event"))
             .finally(() => setLoading(false));
     }, [eventId]);
+    useEffect(() => {
+        if (!eventId || !event || seatsLeft > 0) return;
+        getWaitlistPosition(eventId)
+            .then((res) => {
+                if (res.data.onWaitlist) setWaitlistPosition(res.data.position);
+            })
+            .catch(() => { });
+    }, [eventId, event, seatsLeft]);
 
     useEffect(() => {
         (async () => {
             await refreshUserIfNeeded();
         })();
     }, []);
-
+    const handleJoinWaitlist = async () => {
+        setWaitlistLoading(true);
+        try {
+            const res = await joinWaitlist(eventId!);
+            setWaitlistPosition(res.data.data.position);
+            toast.success(`You're #${res.data.data.position} on the waitlist!`);
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to join waitlist");
+        } finally {
+            setWaitlistLoading(false);
+        }
+    };
     const handleApplyPromo = () => {
         if (!promoInput.trim()) return;
         applyPromo(eventId!, promoInput.trim())
@@ -195,13 +216,32 @@ export default function ReservationPage() {
                             <span>{finalPrice === 0 ? "Free" : `৳${finalPrice.toFixed(2)}`}</span>
                         </div>
                     </div>
-                    <Button
-                        className="w-full bg-green-600 text-black hover:bg-green-800 hover:text-white"
-                        onClick={handleReserve}
-                        disabled={submitting || seatsLeft === 0}
-                    >
-                        {submitting ? "Confirming..." : seatsLeft === 0 ? "Fully Booked" : "Confirm Reservation"}
-                    </Button>
+                    {seatsLeft === 0 ? (
+                        waitlistPosition ? (
+                            <Button
+                                disabled
+                                className="w-full bg-amber-50 border border-amber-300 text-amber-800 cursor-default"
+                            >
+                                ⏳ You're #{waitlistPosition} on the waitlist
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={handleJoinWaitlist}
+                                disabled={waitlistLoading}
+                                className="w-full bg-amber-100 border border-amber-400 text-amber-900 hover:bg-amber-200"
+                            >
+                                {waitlistLoading ? "Joining..." : "Join Waitlist"}
+                            </Button>
+                        )
+                    ) : (
+                        <Button
+                            className="w-full bg-green-600 text-black hover:bg-green-800 hover:text-white"
+                            onClick={handleReserve}
+                            disabled={submitting}
+                        >
+                            {submitting ? "Confirming..." : "Confirm Reservation"}
+                        </Button>
+                    )}
                 </div>
 
             </div>
