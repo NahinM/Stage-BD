@@ -1,4 +1,13 @@
 import axios from "axios";
+import { useUserStore } from "@/store/User/user";
+
+const getUserId = () => useUserStore.getState().user?.id;
+
+const withUser = () => ({
+  params: {
+    userId: getUserId(),
+  },
+});
 
 export const fetchEventDetails = (eventId: string) =>
   axios.get(`/api/reservation/event/${eventId}`);
@@ -11,10 +20,30 @@ export const makeReservation = (payload: {
   slotId: string;
   promoCodeId?: string;
   finalPrice: number;
-}) => axios.post("/api/reservation/reserve", payload);
+}) => {
+  const userId = getUserId();
+  console.log("RESERVE USER:", userId);
 
-export const fetchMyReservations = () =>
-  axios.get("/api/reservation/my");
+  return axios.post("/api/reservation/reserve", payload, {
+    params: { userId },
+  });
+};
 
-export const cancelReservation = (reservationId: string) =>
-  axios.patch(`/api/reservation/cancel/${reservationId}`);
+export const fetchMyReservations = () => {
+  const userId = getUserId();
+  console.log("FETCH USER:", userId);
+
+  return axios.get("/api/reservation/my", {
+    params: { userId },
+  });
+};
+
+export const cancelReservation = (reservationId: string) => {
+  const userId = getUserId();
+
+  return axios.patch(
+    `/api/reservation/cancel/${reservationId}`,
+    {},
+    { params: { userId } }
+  );
+};

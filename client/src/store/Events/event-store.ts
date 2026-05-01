@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { type EventCardType } from "@/Pages/Events/event-feed/event-card-type";
-import axios from "axios";
+import api from "@/authentication/public-api";
 
 interface EventStore {
     events: EventCardType[];
@@ -14,7 +14,7 @@ export const useEventStore = create<EventStore>((set) => ({
     is_fetching: false,
     fetchEvents: () => {
         set({ is_fetching: true });
-        axios.get("/api/event", { params: { query: JSON.stringify({ columns: "id, title, description, type, is_free, category_id", search: null, filter: { category_id: null, is_free: null, type: null, status: null } }) } })
+        api.get("/event", { params: { query: JSON.stringify({ columns: "id, title, description, type, is_free, category_id", search: null, filter: { category_id: null, is_free: null, type: null, status: null } }) } })
             .then((response) => {
                 set({ events: response.data, is_fetching: false });
             })

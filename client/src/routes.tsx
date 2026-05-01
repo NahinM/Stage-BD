@@ -26,6 +26,9 @@ import ContestHub from "./Pages/Contests/ContestHub.tsx";
 import ContestDetail from "./Pages/Contests/ContestDetail.tsx";
 import RecommendationsFeed from "./Pages/Engagement/RecommendationsFeed.tsx";
 
+import OrganizerDashboard from "./Pages/OrganizerDashboard/OrganizerDashboard.tsx";
+import OrganizerWaitlist from "./Pages/waitlist/OrganizerWaitlist.tsx";
+import OrganizerEventList from "./Pages/waitlist/OrganizerEventList.tsx";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -123,5 +126,11 @@ export const router = createBrowserRouter([
   {
     path: "/recommendations",
     element: <RecommendationsFeed />
-  }
+  },
+  {
+    path: "/organizer",
+    element: <OrganizerDashboard />,
+  },
+  { path: "/organizer/waitlist/:eventId", element: <OrganizerWaitlist /> },
+  { path: "/organizer/events", element: <OrganizerEventList /> }
 ])

@@ -9,7 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface Pages {
     name: string;
@@ -19,11 +19,34 @@ interface Pages {
 export default function Nav({ pages }: { pages: Pages[] }) {
 
     const user = useUserStore((state) => state.user);
+    const userRoles = useUserStore((state) => state.userRoles);
+    const [navAccess, setNavAccess] = useState<Record<string, boolean>>({
+        admin: false,
+        organizer: false,
+        staff: false,
+        artist: false,
+        sponsor: false,
+    });
+
     useEffect(() => {
         (async () => {
             await refreshUserIfNeeded();
         })();
     }, [])
+
+    const updateNavAccess = () => {
+        if (user && userRoles) {
+            const access: typeof navAccess = { ...navAccess }
+            userRoles?.forEach(role => {
+                access[role] = true;
+            })
+            setNavAccess(access);
+        }
+    }
+
+    useEffect(() => {
+        updateNavAccess();
+    }, [userRoles])
 
     return (
         <nav className="flex flex-row fixed top-0 left-0 right-0 z-50 px-4 py-3 backdrop-blur-sm items-center">
@@ -47,7 +70,9 @@ export default function Nav({ pages }: { pages: Pages[] }) {
                     {user ? (
                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                             <DropdownMenu>
-                                <DropdownMenuTrigger className="font-bold text-white w-[40px] h-[40px] hover:text-slate-200 rounded-full border border-slate-300 hover:border-slate-500 transition-colors bg-slate-500">
+                                <DropdownMenuTrigger
+                                    onClick={updateNavAccess}
+                                    className="font-bold text-white w-[40px] h-[40px] hover:text-slate-200 rounded-full border border-slate-300 hover:border-slate-500 transition-colors bg-slate-500">
                                     {user.firstname[0].toUpperCase()}
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
@@ -57,6 +82,31 @@ export default function Nav({ pages }: { pages: Pages[] }) {
                                         <DropdownMenuItem>
                                             <Link to="/profile">Profile</Link>
                                         </DropdownMenuItem>
+                                        {navAccess.admin &&
+                                            <DropdownMenuItem>
+                                                <Link to="/admin">Admin Panel</Link>
+                                            </DropdownMenuItem>
+                                        }
+                                        {navAccess.organizer &&
+                                            <DropdownMenuItem>
+                                                <Link to="/organizer">Organizer Panel</Link>
+                                            </DropdownMenuItem>
+                                        }
+                                        {navAccess.staff &&
+                                            <DropdownMenuItem>
+                                                <Link to="/staff">Staff Panel</Link>
+                                            </DropdownMenuItem>
+                                        }
+                                        {navAccess.artist &&
+                                            <DropdownMenuItem>
+                                                <Link to="/artist">Artist Panel</Link>
+                                            </DropdownMenuItem>
+                                        }
+                                        {navAccess.sponsor &&
+                                            <DropdownMenuItem>
+                                                <Link to="/sponsor">Sponsor Panel</Link>
+                                            </DropdownMenuItem>
+                                        }
                                         <DropdownMenuItem>
                                             <Link to="/settings">Settings</Link>
                                         </DropdownMenuItem>

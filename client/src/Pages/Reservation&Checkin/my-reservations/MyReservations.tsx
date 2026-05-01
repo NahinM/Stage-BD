@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import { fetchMyReservations, cancelReservation } from "./api";
-
+import { useUserStore, userLogout, refreshUserIfNeeded } from "@/store/User/user";
 type Reservation = {
     id: string;
     reservation_code: string;
@@ -31,11 +31,32 @@ export default function MyReservations() {
     const [cancelling, setCancelling] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchMyReservations()
-            .then(res => setReservations(res.data.reservations ?? []))
-            .catch(() => toast.error("Failed to load reservations"))
-            .finally(() => setLoading(false));
-    }, []);
+  const load = async () => {
+    setLoading(true);
+
+    try {
+      await refreshUserIfNeeded();
+
+      const userId = useUserStore.getState().user?.id;
+
+      if (!userId) {
+        toast.error("Please sign in again");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetchMyReservations();
+      setReservations(res.data.reservations ?? []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load reservations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  load();
+}, []);
 
     const handleCancel = (reservationId: string, eventDate: string) => {
         const eventTime = new Date(eventDate);
