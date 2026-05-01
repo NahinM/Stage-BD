@@ -22,6 +22,8 @@ import CheckinDashboard from "./Pages/Reservation&Checkin/checkin/CheckinDashboa
 import ScannerPage from "./Pages/Reservation&Checkin/checkin/ScannerPage.tsx";
 import Profile from "./Pages/User/profile.tsx";
 import OrganizerDashboard from "./Pages/Reservation&Checkin/OrganizerDashboard/OrganizerDashboard.tsx";
+import OrganizerWaitlist from "./Pages/waitlist/OrganizerWaitlist.tsx";
+import OrganizerEventList from "./Pages/waitlist/OrganizerEventList.tsx"; 
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -108,5 +110,7 @@ export const router = createBrowserRouter([
   {
   path: "/organizer",
   element: <OrganizerDashboard />,
-}
+  },
+{ path: "/organizer/waitlist/:eventId", element: <OrganizerWaitlist /> },
+{ path: "/organizer/events", element: <OrganizerEventList /> }
 ])

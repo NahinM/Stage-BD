@@ -92,7 +92,6 @@ export default function OrganizerDashboard() {
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon;
-
             return (
               <div
                 key={stat.label}
@@ -117,44 +116,40 @@ export default function OrganizerDashboard() {
             <div className="mb-5 flex flex-wrap gap-3">
               <button
                 onClick={() => setMode("events")}
-                className={`rounded-xl px-4 py-2 ${
-                  mode === "events"
+                className={`rounded-xl px-4 py-2 ${mode === "events"
                     ? "bg-black text-white"
                     : "bg-gray-100 text-gray-700"
-                }`}
+                  }`}
               >
                 Events
               </button>
 
               <button
                 onClick={() => setMode("ticketing")}
-                className={`rounded-xl px-4 py-2 ${
-                  mode === "ticketing"
+                className={`rounded-xl px-4 py-2 ${mode === "ticketing"
                     ? "bg-black text-white"
                     : "bg-gray-100 text-gray-700"
-                }`}
+                  }`}
               >
                 Ticketing
               </button>
 
               <button
                 onClick={() => setMode("engagement")}
-                className={`rounded-xl px-4 py-2 ${
-                  mode === "engagement"
+                className={`rounded-xl px-4 py-2 ${mode === "engagement"
                     ? "bg-black text-white"
                     : "bg-gray-100 text-gray-700"
-                }`}
+                  }`}
               >
                 Engagement
               </button>
 
               <button
                 onClick={() => setMode("artist")}
-                className={`rounded-xl px-4 py-2 ${
-                  mode === "artist"
+                className={`rounded-xl px-4 py-2 ${mode === "artist"
                     ? "bg-black text-white"
                     : "bg-gray-100 text-gray-700"
-                }`}
+                  }`}
               >
                 Artist Growth
               </button>
@@ -181,7 +176,13 @@ export default function OrganizerDashboard() {
                     description="See how events appear to users."
                   />
 
-                  
+                  {/* Added Waitlist Link Here */}
+                  <DashboardLink
+                    to="/organizer/waitlist/:eventId"
+                    icon={Users}
+                    title="Waitlist"
+                    description="View guests waiting for a seat."
+                  />
                 </div>
               </div>
             )}
@@ -212,6 +213,12 @@ export default function OrganizerDashboard() {
                     icon={BadgeDollarSign}
                     title="Promo Codes"
                     description="Create discounts and track usage."
+                  />
+                  <DashboardLink
+                    to="/organizer/events"
+                    icon={Users}
+                    title="Waitlist"
+                    description="View waitlists for your events."
                   />
                 </div>
               </div>
@@ -280,8 +287,6 @@ export default function OrganizerDashboard() {
             )}
           </div>
         )}
-
-        
       </div>
     </div>
   );
