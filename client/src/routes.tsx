@@ -31,6 +31,7 @@ import UserManagement from "./Pages/admin/users.tsx";
 import OrganizerDashboard from "./Pages/OrganizerDashboard/OrganizerDashboard.tsx";
 import OrganizerWaitlist from "./Pages/waitlist/OrganizerWaitlist.tsx";
 import OrganizerContests from "./components/Engagement/OrganizerContests.tsx";
+import ArtistPanel from "./Pages/Artist-Panel/artist-panel.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -148,6 +149,7 @@ export const router = createBrowserRouter([
   },
   { path: "/organizer/waitlist/:eventId", element: <OrganizerWaitlist /> },
 
-  { path: "/organizer/contests", element: <OrganizerContests /> }
+  { path: "/organizer/contests", element: <OrganizerContests /> },
+  { path: "/artist", element: <ArtistPanel /> }
 
 ])

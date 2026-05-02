@@ -3,7 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventsTab from "./events/events-tab";
 import TicketingTab from "./ticketing-tab";
 import EngagementTab from "./engagement-tab";
-import ArtistGrowthTab from "./artist-growth-tab";
 import Nav from "@/components/nav";
 import { useUserStore } from "@/store/User/user";
 
@@ -47,7 +46,6 @@ export default function OrganizerDashboard() {
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="ticketing">Ticketing</TabsTrigger>
             <TabsTrigger value="engagement">Engagement</TabsTrigger>
-            <TabsTrigger value="artist">Artist Growth</TabsTrigger>
           </TabsList>
           <div className="bg-white p-4 rounded-md shadow">
             <TabsContent value="events">
@@ -58,9 +56,6 @@ export default function OrganizerDashboard() {
             </TabsContent>
             <TabsContent value="engagement">
               <EngagementTab />
-            </TabsContent>
-            <TabsContent value="artist">
-              <ArtistGrowthTab />
             </TabsContent>
           </div>
         </Tabs>
