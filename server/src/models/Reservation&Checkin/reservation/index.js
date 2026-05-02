@@ -96,17 +96,54 @@ export const cancelReservation = async (reservationId, userId) => {
     .update({ status: "cancelled" })
     .eq("id", reservationId)
     .eq("user_id", userId)
-    .select("id, event_id, ticket_slot_id")
+    .select("id, event_id, ticket_slot_id, final_price")
     .single();
 
   if (error) { console.error("Error cancelling reservation:", error); return null; }
 
-  // decrement seats_reserved on event
+  // decrement seats
   await supabase.rpc("decrement_seats_reserved", { event_id: data.event_id });
-
-  // decrement sold on ticket_slot if slot exists
   if (data.ticket_slot_id) {
     await supabase.rpc("decrement_slot_sold", { slot_id: data.ticket_slot_id });
+  }
+
+  // check waitlist — promote first person
+  const { data: next } = await supabase
+    .from("waitlist")
+    .select("id, user_id")
+    .eq("event_id", data.event_id)
+    .eq("status", "waiting")
+    .order("position", { ascending: true })
+    .limit(1)
+    .single();
+
+  if (next) {
+    // create reservation for waitlisted user
+    const { nanoid } = await import("nanoid");
+    const reservationCode = nanoid(10).toUpperCase();
+
+    await supabase
+      .from("reservation")
+      .insert({
+        user_id: next.user_id,
+        event_id: data.event_id,
+        ticket_slot_id: data.ticket_slot_id,
+        reservation_code: reservationCode,
+        status: "confirmed",
+        final_price: data.final_price,
+      });
+
+    // increment seats back
+    await supabase.rpc("increment_seats_reserved", { event_id: data.event_id });
+    if (data.ticket_slot_id) {
+      await supabase.rpc("increment_slot_sold", { slot_id: data.ticket_slot_id });
+    }
+
+    // remove from waitlist
+    await supabase
+      .from("waitlist")
+      .update({ status: "cancelled" })
+      .eq("id", next.id);
   }
 
   return data;

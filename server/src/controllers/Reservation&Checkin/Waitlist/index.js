@@ -87,9 +87,7 @@ export const joinWaitlistController = async (req, res) => {
     if (!userId) return res.status(401).json({ message: "Not authenticated" });
     if (!eventId) return res.status(400).json({ message: "eventId required" });
 
-    const full = await isEventFull(eventId);
-    if (!full) return res.status(400).json({ message: "Event still has seats available" });
-
+    // removed isEventFull check — anyone can join waitlist
     const { data, error } = await joinWaitlist(eventId, userId);
     if (error) return res.status(400).json({ message: error.message || error });
 

@@ -20,11 +20,29 @@ export default function ReservationPage() {
     const [submitting, setSubmitting] = useState(false);
     const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
     const [waitlistLoading, setWaitlistLoading] = useState(false);
-    const seatsLeft = event ? event.seat_limit - event.seats_reserved : 0;
+    const seatsLeft = event
+    ? (event.seat_limit ?? 0) - (event.seats_reserved ?? 0)
+    : 0;
     const basePrice = selectedSlot?.price ?? event?.price ?? 0;
     const discount = appliedPromo ? (basePrice * appliedPromo.discount_percent) / 100 : 0;
     const finalPrice = Math.max(0, basePrice - discount);
-
+    console.log("seatsLeft:", seatsLeft, typeof seatsLeft);
+    console.log("seat_limit:", event?.seat_limit, "seats_reserved:", event?.seats_reserved);
+    useEffect(() => {
+    if (!eventId) return;
+    fetchEventDetails(eventId)
+        .then(res => {
+            console.log("event data:", res.data); // add this
+            setEvent(res.data.event);
+            setSlots(res.data.slots ?? []);
+            if (res.data.slots?.length > 0) setSelectedSlot(res.data.slots[0]);
+        })
+        .catch((err) => {
+            console.log("event fetch error:", err); // add this
+            toast.error("Failed to load event");
+        })
+        .finally(() => setLoading(false));
+}, [eventId]);
     useEffect(() => {
         if (!eventId) return;
         fetchEventDetails(eventId)
@@ -102,7 +120,7 @@ export default function ReservationPage() {
             <p className="text-destructive">Event not found.</p>
         </div>
     );
-
+    
     return (
         <div className="flex min-h-screen bg-muted/30 py-10 px-4">
             <div className="mx-auto w-full max-w-2xl space-y-6">
