@@ -17,7 +17,6 @@ interface Pages {
 }
 
 const defaultPages: Pages[] = [
-    { name: "Home", href: "/" },
     { name: "Feed", href: "/feed" }
 ]
 
