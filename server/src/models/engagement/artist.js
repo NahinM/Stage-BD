@@ -27,33 +27,50 @@ export const castVote = async (artist_id, voter_id, vote_type) => {
 
     // 1. Check if vote exists
     const { data: existing } = await supabase
-        .from('artist_vote')
-        .select('id')
-        .match({ voted_id: aUUID, voter_id: vUUID })
+        .from('like')
+        .select('id, vote_type')
+        .match({ liked: aUUID, liked_by: vUUID })
         .maybeSingle();
 
-    if (vote_type === 0) {
+    if (vote_type === "NONE") {
         if (existing) {
-            const { error } = await supabase.from('artist_vote').delete().eq('id', existing.id);
+            const { error } = await supabase.from('like').delete().eq('id', existing.id);
             if (error) throw error;
         }
         return { success: true };
     }
 
     if (existing) {
+        if (existing.vote_type === vote_type) {
+            if (vote_type === "UP") {
+                throw new Error("you already liked the artist");
+            } else {
+                throw new Error("you already disliked the artist");
+            }
+        }
         // 2. Update existing vote
         const { error } = await supabase
-            .from('artist_vote')
+            .from('like')
             .update({ vote_type })
             .eq('id', existing.id);
         if (error) throw error;
     } else {
         // 3. Insert new vote
         const { error } = await supabase
-            .from('artist_vote')
-            .insert([{ voted_id: aUUID, voter_id: vUUID, vote_type }]);
+            .from('like')
+            .insert([{ liked: aUUID, liked_by: vUUID, vote_type }]);
         if (error) throw error;
     }
+    
+    // Update total likes in artist table
+    try {
+        const { data: allVotes } = await supabase.from('like').select('vote_type').eq('liked', aUUID);
+        const newScore = allVotes ? allVotes.reduce((acc, curr) => acc + (curr.vote_type === "UP" ? 1 : curr.vote_type === "DOWN" ? -1 : 0), 0) : 0;
+        await supabase.from('artist_profiles').update({ total_like: newScore }).eq('profile_id', Number(artist_id) || 0);
+    } catch(e) {
+        console.error("Could not update total_like in artist_profiles", e);
+    }
+
     return { success: true };
 };
 
@@ -62,9 +79,9 @@ export const getVoteStatus = async (artist_id, voter_id) => {
     const vUUID = await getUUID(voter_id);
 
     const { data, error } = await supabase
-        .from('artist_vote')
+        .from('like')
         .select('vote_type')
-        .match({ voted_id: aUUID, voter_id: vUUID })
+        .match({ liked: aUUID, liked_by: vUUID })
         .maybeSingle();
     
     return { vote_type: data?.vote_type || null, error };
@@ -73,12 +90,12 @@ export const getVoteStatus = async (artist_id, voter_id) => {
 export const getScore = async (artist_id) => {
     const aUUID = await getUUID(artist_id);
     const { data, error } = await supabase
-        .from('artist_vote')
+        .from('like')
         .select('vote_type')
-        .eq('voted_id', aUUID);
+        .eq('liked', aUUID);
 
     if (error) throw error;
-    return data?.reduce((acc, curr) => acc + curr.vote_type, 0) || 0;
+    return data?.reduce((acc, curr) => acc + (curr.vote_type === "UP" ? 1 : curr.vote_type === "DOWN" ? -1 : 0), 0) || 0;
 };
 
 export const getArtistDetails = async (artistId) => {

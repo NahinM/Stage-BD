@@ -29,6 +29,7 @@ import RecommendationsFeed from "./Pages/Engagement/RecommendationsFeed.tsx";
 import OrganizerDashboard from "./Pages/OrganizerDashboard/OrganizerDashboard.tsx";
 import OrganizerWaitlist from "./Pages/waitlist/OrganizerWaitlist.tsx";
 import OrganizerEventList from "./Pages/waitlist/OrganizerEventList.tsx";
+import OrganizerContests from "./components/Engagement/OrganizerContests.tsx";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -111,6 +112,8 @@ export const router = createBrowserRouter([
     path: "/scanner",
     element: <ScannerPage />,
   },
+
+  // toha's path
   {
     path: "/artist/:artistId",
     element: <ArtistProfile />
@@ -132,5 +135,6 @@ export const router = createBrowserRouter([
     element: <OrganizerDashboard />,
   },
   { path: "/organizer/waitlist/:eventId", element: <OrganizerWaitlist /> },
-  { path: "/organizer/events", element: <OrganizerEventList /> }
+  { path: "/organizer/events", element: <OrganizerEventList /> },
+  { path: "/organizer/contests", element: <OrganizerContests /> }
 ])

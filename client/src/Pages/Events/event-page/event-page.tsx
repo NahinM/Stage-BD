@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { fetchEventDetails, fetchVenueDetails } from "./api";
 import type { EventDetails, Venue } from "./event-detail-type";
 import { useNavigate } from "react-router-dom";
+import { EventReviews } from "@/components/Engagement/EventReviews";
+import Nav from "@/components/nav";
 
 export default function EventPage() {
     const { id } = useParams();
@@ -110,6 +112,8 @@ export default function EventPage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200 px-4 py-10 sm:px-6 lg:px-8">
+            <Nav />
+            <br /><br />
             <div className="mx-auto max-w-4xl space-y-6">
                 {/* Section 1: Title, Description, Type & Status */}
                 <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm">
@@ -259,6 +263,11 @@ export default function EventPage() {
                             <p className="text-sm text-slate-600">No venue information available for this event.</p>
                         </div>
                     )}
+                </section>
+                {/* Section 6: Reviews */}
+                <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm p-6 sm:p-8">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-6">Event Reviews</h2>
+                    <EventReviews eventId={detail.id} />
                 </section>
             </div>
         </main>

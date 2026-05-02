@@ -11,7 +11,7 @@ export default function ArtistProfile() {
     const [events, setEvents] = useState<any[]>([]);
     const [followerCount, setFollowerCount] = useState(0);
     const [voteScore, setVoteScore] = useState(0);
-    const [userVote, setUserVote] = useState<number | null>(null);
+    const [userVote, setUserVote] = useState<"UP" | "DOWN" | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -65,43 +65,40 @@ export default function ArtistProfile() {
         fetchArtistData();
     }, [artistId, currentUserId]);
 
-    const handleVote = async (type: 1 | -1) => {
+    const handleVote = async (type: "UP" | "DOWN") => {
         if (!currentUserId || currentUserId === "00000000-0000-0000-0000-000000000000") {
             alert("Please login to vote!");
             return;
         }
 
         const prevVote = userVote;
-        let newVote: number | null = type;
+        let newVote: "UP" | "DOWN" | "NONE" = type;
         let scoreChange = 0;
 
         if (prevVote === type) {
-            // Unvote (clicking same button)
-            newVote = null;
-            scoreChange = -type;
+            alert(type === "UP" ? "you already liked the artist" : "you already disliked the artist");
+            return;
         } else if (prevVote !== null) {
-            // Cancel opposite vote (clicking Up when Down, or Down when Up)
-            // Moving from -1 to 0 (change of +1) or 1 to 0 (change of -1)
-            newVote = null;
-            scoreChange = type;
+            // Cancel opposite vote and apply new vote
+            scoreChange = type === "UP" ? 2 : -2;
         } else {
-            // New vote (moving from 0 to 1 or -1)
-            newVote = type;
-            scoreChange = type;
+            // New vote
+            scoreChange = type === "UP" ? 1 : -1;
         }
 
-        setUserVote(newVote);
+        setUserVote(type);
         setVoteScore(prev => prev + scoreChange);
 
         try {
             await axios.post(`http://localhost:3000/api/artist/${artistId}/vote`, {
                 voter_id: currentUserId,
-                vote_type: newVote === null ? 0 : newVote
+                vote_type: newVote
             });
-        } catch (err) {
+        } catch (err: any) {
             console.error("Voting failed", err);
             setUserVote(prevVote);
             setVoteScore(prev => prev - scoreChange);
+            alert(err.response?.data?.message || "Failed to cast vote.");
         }
     };
 
@@ -145,19 +142,19 @@ export default function ArtistProfile() {
                         {/* Reddit-Style Artist Voting Cluster */}
                         <div className="flex items-center bg-white/10 rounded-full px-2 py-1">
                             <button
-                                onClick={() => handleVote(1)}
-                                className={`p-1 rounded-full transition-colors ${userVote === 1 ? 'text-green-400 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-green-300'}`}
+                                onClick={() => handleVote("UP")}
+                                className={`p-1 rounded-full transition-colors ${userVote === "UP" ? 'text-green-500 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-green-300'}`}
                             >
-                                <ArrowBigUp className="w-6 h-6" />
+                                <ArrowBigUp className="w-6 h-6" fill={userVote === "UP" ? "currentColor" : "none"} />
                             </button>
                             <span className="font-bold text-lg px-2 min-w-[2rem] text-center">
                                 {voteScore}
                             </span>
                             <button
-                                onClick={() => handleVote(-1)}
-                                className={`p-1 rounded-full transition-colors ${userVote === -1 ? 'text-red-400 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-red-300'}`}
+                                onClick={() => handleVote("DOWN")}
+                                className={`p-1 rounded-full transition-colors ${userVote === "DOWN" ? 'text-red-500 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-red-300'}`}
                             >
-                                <ArrowBigDown className="w-6 h-6" />
+                                <ArrowBigDown className="w-6 h-6" fill={userVote === "DOWN" ? "currentColor" : "none"} />
                             </button>
                         </div>
                     </div>

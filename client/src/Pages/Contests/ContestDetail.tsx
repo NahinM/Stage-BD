@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Trophy, Upload, ArrowUp, ArrowDown, Send, Loader2, ExternalLink } from 'lucide-react';
+import { Trophy, Upload, ArrowUp, ArrowDown, Send, Loader2, ExternalLink, Share2 } from 'lucide-react';
 import { useUserStore } from '../../store/User/user';
 import axios from 'axios';
 
@@ -12,6 +12,29 @@ export default function ContestDetail() {
     
     const { user } = useUserStore();
     const currentUserId = user?.id || "00000000-0000-0000-0000-000000000000";
+
+    const [timeLeft, setTimeLeft] = useState("");
+
+    useEffect(() => {
+        if (!contest?.submission_end) return;
+        
+        const updateTimer = () => {
+            const difference = +new Date(contest.submission_end) - +new Date();
+            if (difference > 0) {
+                const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((difference / 1000 / 60) % 60);
+                const seconds = Math.floor((difference / 1000) % 60);
+                setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+            } else {
+                setTimeLeft("Submission Closed");
+            }
+        };
+
+        const timer = setInterval(updateTimer, 1000);
+        updateTimer();
+        return () => clearInterval(timer);
+    }, [contest]);
 
     const fetchContestData = async () => {
         setLoading(true);
@@ -30,15 +53,21 @@ export default function ContestDetail() {
 
     useEffect(() => { fetchContestData(); }, [contestId]);
 
-    const handleVote = async (entryId: string, voteType: number) => {
+    const handleVote = async (entryId: string, voteType: "UP" | "DOWN") => {
+        if (!currentUserId || currentUserId === "00000000-0000-0000-0000-000000000000") {
+            alert("Please login to vote!");
+            return;
+        }
+
         try {
             await axios.post(`http://localhost:3000/api/contests/entry/${entryId}/vote`, {
                 voter_id: currentUserId,
                 vote_type: voteType
             });
             fetchContestData(); // Refresh UI for accurate score
-        } catch(e) {
+        } catch(e: any) {
             console.error(e);
+            alert(e.response?.data?.message || "Failed to cast vote.");
         }
     };
 
@@ -58,9 +87,15 @@ export default function ContestDetail() {
             });
             fetchContestData();
             (e.target as HTMLFormElement).reset();
-        } catch(e) {
+        } catch(e: any) {
             console.error(e);
+            alert(e.response?.data?.message || "Failed to submit entry.");
         }
+    };
+
+    const copyShareLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Contest link copied to clipboard! Share it with others to get votes.");
     };
 
     if (loading) return <div className="flex justify-center py-32"><Loader2 className="w-12 h-12 animate-spin text-indigo-500" /></div>;
@@ -68,7 +103,17 @@ export default function ContestDetail() {
 
     return (
         <div className="max-w-7xl mx-auto p-6 md:p-12 animate-in fade-in duration-500">
-            <h1 className="text-5xl font-black mb-6 text-zinc-900 dark:text-white tracking-tight leading-tight">{contest.title}</h1>
+            {timeLeft && (
+                <div className="bg-indigo-600 text-white text-center font-bold py-2 px-4 rounded-full w-fit mx-auto mb-6 shadow-md shadow-indigo-500/20">
+                    ⏳ Time Remaining: {timeLeft}
+                </div>
+            )}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-6">
+                <h1 className="text-5xl font-black text-zinc-900 dark:text-white tracking-tight leading-tight text-center">{contest.title}</h1>
+                <button onClick={copyShareLink} className="flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-full font-bold transition-colors">
+                    <Share2 className="w-4 h-4"/> Share
+                </button>
+            </div>
             <div className="bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 mb-10">
                 <h3 className="font-bold text-zinc-900 dark:text-white mb-2 uppercase tracking-widest text-sm text-indigo-600">Rules & Guidelines</h3>
                 <p className="text-zinc-600 dark:text-zinc-400 max-w-4xl text-lg leading-relaxed">{contest.rules}</p>
@@ -102,14 +147,14 @@ export default function ContestDetail() {
                         <div key={idx} className="flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
                             {/* Voting Widget Column */}
                             <div className="flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-800/30 w-20 sm:w-24 border-r border-zinc-100 dark:border-zinc-800">
-                                <button onClick={() => handleVote(entry.id, 1)} className="p-3 hover:bg-white dark:hover:bg-zinc-700 rounded-xl text-zinc-400 hover:text-indigo-600 transition-colors shadow-sm bg-transparent hover:shadow">
-                                    <ArrowUp className="w-6 h-6 md:w-8 md:h-8 font-bold" />
+                                <button onClick={() => handleVote(entry.id, "UP")} className="p-3 hover:bg-white dark:hover:bg-zinc-700 rounded-xl text-zinc-400 hover:text-green-500 transition-colors shadow-sm bg-transparent hover:shadow group/up">
+                                    <ArrowUp className="w-6 h-6 md:w-8 md:h-8 font-bold group-hover/up:fill-green-500 group-active/up:fill-green-500 transition-all" />
                                 </button>
-                                <span className={`font-black text-2xl md:text-3xl my-3 tracking-tighter ${entry.vote_score > 0 ? 'text-indigo-600 dark:text-indigo-400 drop-shadow-sm' : entry.vote_score < 0 ? 'text-rose-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                                <span className={`font-black text-2xl md:text-3xl my-3 tracking-tighter ${entry.vote_score > 0 ? 'text-green-500 drop-shadow-sm' : entry.vote_score < 0 ? 'text-red-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
                                     {entry.vote_score}
                                 </span>
-                                <button onClick={() => handleVote(entry.id, -1)} className="p-3 hover:bg-white dark:hover:bg-zinc-700 rounded-xl text-zinc-400 hover:text-rose-500 transition-colors shadow-sm bg-transparent hover:shadow">
-                                    <ArrowDown className="w-6 h-6 md:w-8 md:h-8 font-bold" />
+                                <button onClick={() => handleVote(entry.id, "DOWN")} className="p-3 hover:bg-white dark:hover:bg-zinc-700 rounded-xl text-zinc-400 hover:text-red-500 transition-colors shadow-sm bg-transparent hover:shadow group/down">
+                                    <ArrowDown className="w-6 h-6 md:w-8 md:h-8 font-bold group-hover/down:fill-red-500 group-active/down:fill-red-500 transition-all" />
                                 </button>
                             </div>
                             
