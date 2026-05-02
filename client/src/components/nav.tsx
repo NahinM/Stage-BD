@@ -16,8 +16,12 @@ interface Pages {
     href: string;
 }
 
-export default function Nav({ pages }: { pages: Pages[] }) {
+const defaultPages: Pages[] = [
+    { name: "Home", href: "/" },
+    { name: "Feed", href: "/feed" }
+]
 
+export default function Nav({ pages }: { pages?: Pages[] }) {
     const user = useUserStore((state) => state.user);
     const userRoles = useUserStore((state) => state.userRoles);
     const [navAccess, setNavAccess] = useState<Record<string, boolean>>({
@@ -55,7 +59,7 @@ export default function Nav({ pages }: { pages: Pages[] }) {
             </div>
             <div className="grow"></div>
             <ul className="flex flex-row gap-1 items-center">
-                {pages.map((page) => (
+                {(pages ? pages : defaultPages).map((page) => (
                     <li
                         key={page.href}
                     >
