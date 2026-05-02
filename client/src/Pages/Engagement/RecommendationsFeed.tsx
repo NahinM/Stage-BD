@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Sparkles, Calendar, MapPin, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useUserStore } from '../../store/User/user';
@@ -54,30 +55,34 @@ export default function RecommendationsFeed() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {events.map((event, idx) => (
                         <div key={idx} className="group flex flex-col bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-zinc-100 dark:border-zinc-800 hover:-translate-y-2">
-                            <div className="relative h-60 bg-zinc-200 overflow-hidden">
+                            <Link to={`/event/${event.id}`} className="relative h-60 bg-zinc-200 overflow-hidden block">
                                 <img src={event.poster_url || `https://picsum.photos/400/300?random=${event.id}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="event poster" />
                                 <div className="absolute top-4 right-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm text-indigo-900 dark:text-indigo-100 font-bold px-4 py-1.5 rounded-full shadow-lg text-sm flex items-center gap-2 border border-white/50 dark:border-zinc-700">
                                     MATCH <span className="text-indigo-600 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/50 w-7 h-7 rounded-full flex items-center justify-center font-black">{event.score}</span>
                                 </div>
-                            </div>
+                            </Link>
                             <div className="p-6 flex flex-col flex-1">
                                 <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm mb-3">
                                     <span className="uppercase tracking-wider">{event.event_category?.name || "Music"}</span>
                                     <span className="text-zinc-300 dark:text-zinc-600">•</span>
                                     <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.venue?.city || "Local"}</span>
                                 </div>
-                                <h3 className="text-2xl font-bold mb-4 line-clamp-2 text-zinc-900 dark:text-white group-hover:text-indigo-600 transition-colors leading-tight">
-                                    {event.title}
-                                </h3>
+                                <Link to={`/event/${event.id}`}>
+                                    <h3 className="text-2xl font-bold mb-4 line-clamp-2 text-zinc-900 dark:text-white group-hover:text-indigo-600 transition-colors leading-tight">
+                                        {event.title}
+                                    </h3>
+                                </Link>
 
                                 <div className="mt-auto pt-6 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800">
                                     <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
                                         <Calendar className="w-5 h-5 text-indigo-500" />
                                         <span className="font-semibold">{new Date(event.event_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                                     </div>
-                                    <button className="bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-600 hover:text-white dark:bg-indigo-900/30 dark:border-indigo-500/30 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 px-6 py-2.5 rounded-xl transition-all font-bold shadow-sm hover:shadow-md">
-                                        Tickets
-                                    </button>
+                                    <Link to={`/event/${event.id}`}>
+                                        <button className="bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-600 hover:text-white dark:bg-indigo-900/30 dark:border-indigo-500/30 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 px-6 py-2.5 rounded-xl transition-all font-bold shadow-sm hover:shadow-md">
+                                            Tickets
+                                        </button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>

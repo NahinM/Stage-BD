@@ -41,15 +41,16 @@ export function EventReviews({ eventId }: { eventId: string }) {
         if (!newReview.trim()) return;
 
         try {
-            await _api.post(`/api/events/${eventId}/reviews`, {
+            await _api.post(`/events/${eventId}/reviews`, {
                 user_id: user.id,
                 review: newReview,
             });
             setNewReview("");
             fetchReviews();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to post review", error);
-            alert("Failed to post review. You might need to be logged in.");
+            const msg = error.response?.data?.message || "Failed to post review. You might need to be logged in.";
+            alert(msg);
         }
     };
 

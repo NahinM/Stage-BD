@@ -1,40 +1,45 @@
 import { supabase } from "../../config/database.js";
 
 export const getRecommendations = async (userId) => {
-    // 1. Get user's followed artists
-    const { data: following } = await supabase
-        .from('follow')
-        .select('followed_id')
-        .eq('follower_id', userId);
-    
-    const followedIds = following?.map(f => f.followed_id) || [];
-
-    // 2. Get user's city
-    const { data: user } = await supabase
+    // 1. Get user's city
+    const { data: user, error: userError } = await supabase
         .from('user')
         .select('city')
         .eq('id', userId)
         .single();
     
+    if (userError) {
+        console.error("Error fetching user city:", userError);
+        return [];
+    }
     const userCity = user?.city;
 
-    // 3. Fetch events
-    // Logic: Events by followed artists OR events in user's city
-    // For simplicity, we fetch all and score them
-    let query = supabase.from('event').select('*, event_category(name), venue(city)');
-    
-    const { data: events, error } = await query;
-    if (error) throw error;
+    if (!userCity) {
+        return [];
+    }
 
-    // Basic scoring
-    const scoredEvents = events.map(event => {
-        let score = 0;
-        if (followedIds.includes(event.organizer_id)) score += 50;
-        if (event.venue?.city === userCity) score += 30;
-        // Random variance for "freshness"
-        score += Math.floor(Math.random() * 20);
-        return { ...event, score };
-    });
+    // 2. Fetch events where venue city matches user city
+    // We use inner join on venue to filter events based on the venue's city
+    const { data: events, error } = await supabase
+        .from('event')
+        .select(`
+            *,
+            event_category(name),
+            venue!inner(city)
+        `)
+        .eq('venue.city', userCity)
+        .order('event_date', { ascending: true });
 
-    return scoredEvents.sort((a, b) => b.score - a.score).slice(0, 10);
+    if (error) {
+        console.error("Error fetching recommended events:", error);
+        throw error;
+    }
+
+    // Add a score property since frontend expects it
+    const scoredEvents = events.map(event => ({
+        ...event,
+        score: 100
+    }));
+
+    return scoredEvents;
 };
