@@ -52,7 +52,7 @@ export default function Nav({ pages }: { pages?: Pages[] }) {
     }, [userRoles])
 
     return (
-        <nav className="flex flex-row fixed top-0 left-0 right-0 z-50 px-4 py-3 backdrop-blur-sm items-center">
+        <nav className="flex flex-row fixed top-0 left-0 right-0 z-50 px-4 py-3 backdrop-blur-sm items-center shadow-md bg-sky-100/30">
             <div>
                 <a className="font-bold text-slate-900 hover:text-sky-700 transition-colors border border-slate-300 hover:border-slate-500 px-4 py-1 rounded-md"> StageBD</a>
             </div>
