@@ -50,21 +50,22 @@ export const UserModel = {
   search: {
     username: async (value) => {
       const res =
-        await sql`SELECT * FROM public."user" WHERE username ILIKE ${value}`;
+        await sql`SELECT * FROM public."user" WHERE username ILIKE ${value} limit 1`;
       return res;
     },
     email: async (value) => {
       const res =
-        await sql`SELECT * FROM public."user" WHERE email ILIKE ${value}`;
+        await sql`SELECT * FROM public."user" WHERE email ILIKE ${value} limit 1`;
       return res;
     },
     phone: async (value) => {
-      const res = await sql`SELECT * FROM public."user" WHERE phone = ${value}`;
+      const res =
+        await sql`SELECT * FROM public."user" WHERE phone = ${value} limit 1`;
       return res;
     },
     find: async (value) => {
       const res =
-        await sql`SELECT id,username,firstname,lastname FROM public."user" WHERE username ILIKE ${`%${value}%`} OR firstname ILIKE ${`%${value}%`} OR lastname ILIKE ${`%${value}%`}`;
+        await sql`SELECT id,username,firstname,lastname FROM public."user" WHERE username ILIKE ${`%${value}%`} OR firstname ILIKE ${`%${value}%`} OR lastname ILIKE ${`%${value}%`} limit 10`;
       return res;
     },
   },
