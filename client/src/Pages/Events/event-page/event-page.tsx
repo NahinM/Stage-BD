@@ -256,11 +256,17 @@ export default function EventPage() {
                                 {detail.is_free ? "This is a free event" : "Paid entry"}
                             </p>
                             <button
-                                type="button" disabled={isSoldOut}
-                                className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition ${isSoldOut ? "bg-gray-500 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
+                                type="button"
+                                // 1. Remove or set disabled to false
+                                disabled={false}
+                                className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition ${isSoldOut
+                                        ? "bg-amber-600 hover:bg-amber-700" // 2. Change color to indicate waitlist
+                                        : "bg-green-600 hover:bg-green-700"
+                                    }`}
                                 onClick={() => navigate(`/reserve/${detail.id}`)}
                             >
-                                Reserve Ticket
+                                {/* 3. Optional: Change text based on status */}
+                                {isSoldOut ? "Join Waitlist" : "Reserve Ticket"}
                             </button>
                         </div>
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">

@@ -1,5 +1,5 @@
 import { useCategoryStore } from "@/store/category";
-import { Edit, Users } from "lucide-react"
+import { Edit, QrCode, Trash2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import EventEdit from "./event-edit";
-
+import { deleteEvent, deleteVenue } from "./api";
 export interface EventItem {
     id: string;
     status: "Draft" | "Published";
@@ -18,6 +18,7 @@ export interface EventItem {
     is_free: boolean;
     type: string;
     category_id: number;
+    venue_id: string;
 }
 
 export default function EventCard({ event }: { event: EventItem }) {
@@ -47,43 +48,61 @@ export default function EventCard({ event }: { event: EventItem }) {
                     ))
                 }
             </div>
-            <div className="mt-4 flex flex-row">
+            <div className="mt-4 grid grid-cols-3 gap-1">
+                {/* Edit */}
                 <Dialog>
-                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-green-700 text-white rounded-l-md hover:bg-green-800">
+                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-green-700 text-white rounded-md hover:bg-green-800">
                         <Edit size={15} /> Edit
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-5xl overflow-y-auto h-9/10">
-                        <div>
-                            <EventEdit event_id={event.id} />
-                        </div>
+                        <EventEdit event_id={event.id} />
                     </DialogContent>
                 </Dialog>
-                <Dialog>
-                    <DialogTrigger
-                        className="w-full flex items-center justify-center gap-1 py-1 px-1 bg-yellow-700 text-white hover:bg-yellow-800 shadow-md"
-                    >
-                        <Link to={`/organizer/waitlist/${event.id}`}> <span className="flex flex-row items-center gap-1"><Users size={14} /> Wait List</span></Link>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-3xl overflow-y-auto h-9/10">
-                        <div>
-                            <h1>Edit Event</h1>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-                <Dialog>
-                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-red-700 text-white rounded-r-md hover:bg-red-800">
-                        Delete
+
+                {/* Waitlist */}
+                <Link
+                    to={`/organizer/waitlist/${event.id}`}
+                    className="w-full flex items-center justify-center gap-1 py-1 bg-yellow-700 text-white hover:bg-yellow-800 rounded-md"
+                >
+                    <Edit size={14} /> Wait List
+                </Link>
+
+                {/* Check-in */}
+                <Link
+                    to={`/checkin/${event.id}`}
+                    className="w-full flex items-center justify-center gap-1 py-1 bg-blue-700 text-white hover:bg-blue-800 rounded-md"
+                >
+                    <QrCode size={14} /> Check-in
+                </Link>
+
+
+                {/* <Dialog>
+                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-red-700 text-white rounded-md hover:bg-red-800">
+                        <Trash2 size={14} /> Delete
                     </DialogTrigger>
                     <DialogContent>
                         <div className="flex flex-col items-center justify-center gap-4">
                             <h1 className="p-3 text-lg font-bold">Do you want to delete this event?</h1>
                             <p>Event Title: <span className="font-semibold">{event.title}</span></p>
                             <div>
-                                <Button className="bg-red-700 hover:bg-red-800">Delete</Button>
+                                <Button className="bg-red-700 hover:bg-red-800" onClick={() => {
+                                    deleteEvent(event.id).then(() => {
+                                        console.log("Event and venue deleted successfully");
+                                        deleteVenue(event.venue_id).then(() => {
+                                            console.log("Venue deleted successfully");
+                                        }).catch((err) => {
+                                            console.error("Error deleting venue: ", err);
+                                        });
+                                    }).catch((err) => {
+                                        console.error("Error deleting event: ", err);
+                                    });
+                                }}>
+                                    Delete
+                                </Button>
                             </div>
                         </div>
                     </DialogContent>
-                </Dialog>
+                </Dialog> */}
             </div>
         </div>
     )

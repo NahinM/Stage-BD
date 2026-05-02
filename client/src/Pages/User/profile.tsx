@@ -34,7 +34,7 @@ export default function Profile() {
     }
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 p-6">
-            <Nav pages={[{ name: "Home", href: "/" }, { name: "feed", href: "/feed" }]} />
+            <Nav />
             <br /><br />
             <div className="max-w-6xl mx-auto">
                 <section className="relative flex flex-row items-center bg-white rounded-lg shadow-md p-6">

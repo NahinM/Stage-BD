@@ -1,48 +1,16 @@
-import { useMemo, useState } from "react";
-import {
-  CalendarPlus,
-  Ticket,
-  QrCode,
-  BadgeDollarSign,
-  RefreshCcw,
-} from "lucide-react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventsTab from "./events/events-tab";
 import TicketingTab from "./ticketing-tab";
 import EngagementTab from "./engagement-tab";
 import ArtistGrowthTab from "./artist-growth-tab";
 import Nav from "@/components/nav";
+import { useUserStore } from "@/store/User/user";
 
 export default function OrganizerDashboard() {
   const [loading] = useState(false);
   const [error] = useState("");
-  const [showActionPanel, setShowActionPanel] = useState(true);
-
-  const stats = useMemo(
-    () => [
-      {
-        label: "Total Events",
-        value: "12",
-        icon: CalendarPlus,
-      },
-      {
-        label: "Reservations",
-        value: "348",
-        icon: Ticket,
-      },
-      {
-        label: "Checked In",
-        value: "219",
-        icon: QrCode,
-      },
-      {
-        label: "Promo Uses",
-        value: "74",
-        icon: BadgeDollarSign,
-      },
-    ],
-    []
-  );
+  const user = useUserStore((state) => state.user);
 
   if (loading) {
     return <div className="p-8 text-lg font-medium">Loading dashboard...</div>;
@@ -62,20 +30,10 @@ export default function OrganizerDashboard() {
               Manage events, tickets, QR check-in, promo codes, contests, artists, sponsors, and analytics.
             </p>
           </div>
+        </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowActionPanel((prev) => !prev)}
-              className="rounded-xl bg-green-600 px-4 py-2 text-white shadow hover:bg-green-700"
-            >
-              {showActionPanel ? "Close Tools" : "Open Tools"}
-            </button>
-
-            <button className="rounded-xl bg-black px-4 py-2 text-white shadow hover:opacity-90">
-              <RefreshCcw className="mr-2 inline h-4 w-4" />
-              Refresh
-            </button>
-          </div>
+        <div className="p-10 mb-5 bg-green-100 rounded-md border border-green-500 text-xl">
+          Welcome to Dashboard <span className="text-green-600">{user?.firstname} {user?.lastname}</span>!
         </div>
 
         {error && (
@@ -83,29 +41,6 @@ export default function OrganizerDashboard() {
             {error}
           </div>
         )}
-
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-
-            return (
-              <div
-                key={stat.label}
-                className="rounded-2xl border bg-white p-6 shadow-sm"
-              >
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100">
-                  <Icon className="h-5 w-5 text-gray-700" />
-                </div>
-                <p className="text-sm font-medium text-gray-500">
-                  {stat.label}
-                </p>
-                <h2 className="mt-2 text-4xl font-bold text-green-600">
-                  {stat.value}
-                </h2>
-              </div>
-            );
-          })}
-        </div>
 
         <Tabs defaultValue="account">
           <TabsList>
