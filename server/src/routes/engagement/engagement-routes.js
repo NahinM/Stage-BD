@@ -3,10 +3,11 @@ import { postReview, editReview, getReviews, voteReview } from "../../controller
 import { followUser, unfollowUser, getFollowers, getFollowing, getFollowerCount, checkFollowStatus } from "../../controllers/engagement/follows-controller.js";
 import { getSmartRecommendations } from "../../controllers/engagement/recommendations-controller.js";
 import { submitEntry, getLeaderboard, voteEntry, getContests, getContestById, createContest } from "../../controllers/engagement/contests-controller.js";
-import { castArtistVote, getArtistScore, getArtistProfile, getArtistEvents, getArtistVoteStatus } from "../../controllers/engagement/artist-controller.js";
+import { castArtistVote, getArtistScore, getArtistProfile, getArtistEvents, getArtistVoteStatus, fetchAllArtists } from "../../controllers/engagement/artist-controller.js";
 import { fetchEventReviews, postEventReview } from "../../controllers/engagement/event-reviews-controller.js";
 
 // Artist Profile & Voting
+app.get('/api/artists/explore', fetchAllArtists);
 app.get('/api/artist/:artist_id/profile', getArtistProfile);
 app.get('/api/artist/:artist_id/vote-status', getArtistVoteStatus);
 app.get('/api/artist/:artist_id/events', getArtistEvents);

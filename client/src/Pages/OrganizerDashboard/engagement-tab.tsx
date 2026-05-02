@@ -9,7 +9,7 @@ export default function EngagementTab() {
                     Audience Engagement
                 </h2>
 
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2">
                     <DashboardLink
                         to="/organizer/contests"
                         icon={Trophy}
@@ -18,17 +18,10 @@ export default function EngagementTab() {
                     />
 
                     <DashboardLink
-                        to="/events"
+                        to="/recommendations"
                         icon={Sparkles}
                         title="Smart Recommendations"
                         description="Improve discovery and audience matching."
-                    />
-
-                    <DashboardLink
-                        to="/community"
-                        icon={Users}
-                        title="Community Contests"
-                        description="Engage users with public competitions."
                     />
                 </div>
             </div>

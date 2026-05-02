@@ -25,6 +25,7 @@ import ArtistProfile from "./Pages/Engagement/ArtistProfile.tsx";
 import ContestHub from "./Pages/Contests/ContestHub.tsx";
 import ContestDetail from "./Pages/Contests/ContestDetail.tsx";
 import RecommendationsFeed from "./Pages/Engagement/RecommendationsFeed.tsx";
+import ExploreArtists from "./Pages/Engagement/ExploreArtists.tsx";
 
 import AdminDashboard from "./Pages/admin/dashboard.tsx";
 import UserManagement from "./Pages/admin/users.tsx";
@@ -140,6 +141,10 @@ export const router = createBrowserRouter([
   {
     path: "/recommendations",
     element: <RecommendationsFeed />
+  },
+  {
+    path: "/explore-artists",
+    element: <ExploreArtists />
   },
   {
     path: "/organizer",

@@ -70,3 +70,13 @@ export const getArtistEvents = async (req, res) => {
         res.status(500).send({ message: "Failed to fetch artist events." });
     }
 };
+
+export const fetchAllArtists = async (req, res) => {
+    try {
+        const data = await artistModel.getAllArtists();
+        res.status(200).send({ message: "All artists fetched.", data });
+    } catch (err) {
+        console.error("Failed to fetch all artists:", err);
+        res.status(500).send({ message: "Failed to fetch all artists." });
+    }
+};

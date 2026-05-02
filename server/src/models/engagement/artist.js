@@ -163,24 +163,55 @@ export const getArtistDetails = async (artistId) => {
         city: user?.city || "",
         bio: profile.bio || user?.bio || "",
         genres: profile.genres || "",
-        social_links: profile.social_links || {}
+        social_links: profile.social_links || {},
+        total_like: profile.total_like || 0
     };
 };
 
 export const getArtistEvents = async (artistId) => {
-    // Resolve artistId to actual UUID if it's a username
-    const { data: user } = await supabase
-        .from('user')
-        .select('id')
-        .or(`id.eq.${artistId},username.eq.${artistId}`)
-        .maybeSingle();
-    
-    const targetId = user?.id || artistId;
+    // Resolve artistId to actual UUID
+    const targetId = await getUUID(artistId);
 
     const { data, error } = await supabase
         .from('event_artist')
         .select('event!inner(*, venue(name, city))')
-        .eq('artist_id', `${targetId}`);
+        .eq('artist_id', targetId);
     if (error) throw error;
     return data.map(e => e.event);
+};
+
+export const getAllArtists = async () => {
+    const { data: profiles, error } = await supabase
+        .from('artist_profiles')
+        .select('*');
+        
+    if (error) throw error;
+    if (!profiles || profiles.length === 0) return [];
+    
+    const usernames = profiles.map(p => p.username);
+    const { data: users, error: userError } = await supabase
+        .from('user')
+        .select('id, username, firstname, lastname, avatar_url, city')
+        .in('username', usernames);
+        
+    if (userError) throw userError;
+    
+    const userMap = {};
+    users.forEach(u => { userMap[u.username] = u; });
+    
+    return profiles.map(p => {
+        const u = userMap[p.username] || {};
+        return {
+            id: p.profile_id,
+            user_id: u.id || null,
+            username: p.username,
+            firstname: u.firstname || "",
+            lastname: u.lastname || "",
+            avatar_url: u.avatar_url || "",
+            city: u.city || "",
+            bio: p.bio || "",
+            genres: p.genres || "",
+            total_like: p.total_like || 0
+        };
+    });
 };

@@ -19,10 +19,9 @@ export default function ArtistProfile() {
     const currentUserId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     useEffect(() => {
-        const fetchArtistData = async () => {
+        const fetchBasicData = async () => {
             if (!artistId) return;
             setLoading(true);
-
             try {
                 // Fetch basic user profile via API
                 const profileRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/profile`);
@@ -36,33 +35,37 @@ export default function ArtistProfile() {
                 const eventsRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/events`);
                 setEvents(eventsRes.data.data || []);
 
-                // Fetch Artist Vote Score
-                try {
-                    const scoreRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/score`);
-                    setVoteScore(scoreRes.data.score || 0);
-                } catch (e) { console.error("Could not fetch score"); }
-
-                // Fetch Follow Status
-                if (currentUserId !== "00000000-0000-0000-0000-000000000000") {
-                    const statusRes = await axios.get(`http://localhost:3000/api/follows/status`, {
-                        params: { follower_id: currentUserId, followed_id: artistId }
-                    });
-                    setIsFollowing(statusRes.data.isFollowing);
-
-                    // Fetch user's current vote
-                    const voteRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/vote-status`, {
-                        params: { voter_id: currentUserId }
-                    });
-                    setUserVote(voteRes.data.vote_type);
-                }
-
+                // Initialize score from artist_profiles total_like column
+                setVoteScore(profileRes.data.data.total_like || 0);
             } catch (err) {
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchArtistData();
+        fetchBasicData();
+    }, [artistId]);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!artistId || currentUserId === "00000000-0000-0000-0000-000000000000") return;
+            try {
+                // Fetch Follow Status
+                const statusRes = await axios.get(`http://localhost:3000/api/follows/status`, {
+                    params: { follower_id: currentUserId, followed_id: artistId }
+                });
+                setIsFollowing(statusRes.data.isFollowing);
+
+                // Fetch user's current vote
+                const voteRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/vote-status`, {
+                    params: { voter_id: currentUserId }
+                });
+                setUserVote(voteRes.data.vote_type);
+            } catch (err) {
+                console.error("Failed to fetch user specific data", err);
+            }
+        };
+        fetchUserData();
     }, [artistId, currentUserId]);
 
     const handleVote = async (type: "UP" | "DOWN") => {
