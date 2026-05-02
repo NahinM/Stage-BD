@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { joinWaitlist, getWaitlistPosition } from "./api";
+import Nav from "@/components/nav";
 
 type Props = {
   eventId: string;
@@ -47,6 +48,10 @@ export default function WaitlistButton({ eventId, isFull }: Props) {
   }
 
   return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <Nav />
+      <br /><br />
+      <div className="mx-auto max-w-7xl"></div>
     <button
       onClick={handleJoin}
       disabled={loading}
@@ -54,5 +59,6 @@ export default function WaitlistButton({ eventId, isFull }: Props) {
     >
       {loading ? "Joining..." : "Join waitlist"}
     </button>
+    </div>
   );
 }

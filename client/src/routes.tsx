@@ -25,7 +25,7 @@ import AdminDashboard from "./Pages/admin/dashboard.tsx";
 import UserManagement from "./Pages/admin/users.tsx";
 import OrganizerDashboard from "./Pages/OrganizerDashboard/OrganizerDashboard.tsx";
 import OrganizerWaitlist from "./Pages/waitlist/OrganizerWaitlist.tsx";
-import OrganizerEventList from "./Pages/waitlist/OrganizerEventList.tsx";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -96,13 +96,10 @@ export const router = createBrowserRouter([
     element: <MyReservations />,
   },
   {
-    path: "/checkin",
+    path: "/checkin/:eventId",
     element: <CheckinDashboard />,
   },
-  {
-    path: "/scanner",
-    element: <ScannerPage />,
-  },
+  
   {
     path: "/admin/dashboard",
     element: <AdminDashboard />,
@@ -122,6 +119,6 @@ export const router = createBrowserRouter([
     path: "/organizer",
     element: <OrganizerDashboard />,
   },
-  { path: "/organizer/waitlist/:eventId", element: <OrganizerWaitlist /> },
-  { path: "/organizer/events", element: <OrganizerEventList /> }
+  { path: "/organizer/waitlist/:eventId", element: <OrganizerWaitlist /> }
+  
 ])

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import { fetchMyReservations, cancelReservation } from "./api";
 import { useUserStore, userLogout, refreshUserIfNeeded } from "@/store/User/user";
+import Nav from "@/components/nav";
 type Reservation = {
     id: string;
     reservation_code: string;
@@ -89,12 +90,16 @@ export default function MyReservations() {
     );
 
     return (
+        <div className="min-h-screen bg-gray-50 p-6">
+      <Nav />
+      <br /><br />
+      <div className="mx-auto max-w-7xl"></div>
         <div className="min-h-screen bg-muted/30 py-10 px-4">
             <div className="mx-auto max-w-2xl space-y-6">
 
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">My Reservations</h1>
-                    <Button variant="outline" onClick={() => navigate("/")}>Back to home</Button>
+                    <Button variant="outline" onClick={() => navigate("/feed")}>Back to home</Button>
                 </div>
 
                 {reservations.length === 0 && (
@@ -207,6 +212,7 @@ export default function MyReservations() {
                     </div>
                 ))}
             </div>
+        </div>
         </div>
     );
 }
