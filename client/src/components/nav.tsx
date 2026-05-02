@@ -90,6 +90,13 @@ export default function Nav({ pages }: { pages?: Pages[] }) {
                                                 <Link to="/admin/dashboard">Admin Panel</Link>
                                             </DropdownMenuItem>
                                         }
+                                        <DropdownMenuItem>
+                                            <Link to="/my-reservations">My reservations</Link>
+                                        </DropdownMenuItem>
+
+
+
+                                        
                                         {navAccess.organizer &&
                                             <DropdownMenuItem>
                                                 <Link to="/organizer">Organizer Panel</Link>
