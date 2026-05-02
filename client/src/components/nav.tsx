@@ -110,7 +110,7 @@ export default function Nav({ pages }: { pages?: Pages[] }) {
 
 
 
-                                        
+
                                         {navAccess.organizer &&
                                             <DropdownMenuItem>
                                                 <Link to="/organizer">Organizer Panel</Link>
@@ -131,9 +131,6 @@ export default function Nav({ pages }: { pages?: Pages[] }) {
                                                 <Link to="/sponsor">Sponsor Panel</Link>
                                             </DropdownMenuItem>
                                         }
-                                        <DropdownMenuItem>
-                                            <Link to="/settings">Settings</Link>
-                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem>
                                             <button onClick={userLogout}>Logout</button>
