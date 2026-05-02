@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import EventEdit from "./event-edit";
-
+import { deleteEvent, deleteVenue } from "./api";
 export interface EventItem {
     id: string;
     status: "Draft" | "Published";
@@ -18,6 +18,7 @@ export interface EventItem {
     is_free: boolean;
     type: string;
     category_id: number;
+    venue_id: string;
 }
 
 export default function EventCard({ event }: { event: EventItem }) {
@@ -79,7 +80,17 @@ export default function EventCard({ event }: { event: EventItem }) {
                             <h1 className="p-3 text-lg font-bold">Do you want to delete this event?</h1>
                             <p>Event Title: <span className="font-semibold">{event.title}</span></p>
                             <div>
-                                <Button className="bg-red-700 hover:bg-red-800">Delete</Button>
+                                <Button className="bg-red-700 hover:bg-red-800" onClick={() => {
+                                    deleteVenue(event.venue_id).then(() => {
+                                        deleteEvent(event.id).then(() => {
+                                            console.log("Event and venue deleted successfully");
+                                        }).catch((err) => {
+                                            console.error("Error deleting event: ", err);
+                                        });
+                                    });
+                                }}>
+                                    Delete
+                                </Button>
                             </div>
                         </div>
                     </DialogContent>
