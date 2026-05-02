@@ -20,7 +20,7 @@ const useMyEventsStore = create<MyEventsState>((set) => ({
                 await refreshUserIfNeeded()
                 console.log("Current user in EventsTab: ", user.id);
                 const query = {
-                    columns: "id, title, description, is_free, type, category_id, status",
+                    columns: "id, title, description, is_free, type, category_id, status, venue_id",
                     search: { by: 'organizer', value: user.id },
                     filter: { category_id: null, is_free: null, type: null, status: null },
                 };

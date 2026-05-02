@@ -1,5 +1,5 @@
 import { useCategoryStore } from "@/store/category";
-import { Edit, QrCode, User, Trash2 } from "lucide-react"
+import { Edit, QrCode, Trash2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -48,10 +48,10 @@ export default function EventCard({ event }: { event: EventItem }) {
                     ))
                 }
             </div>
-            <div className="mt-4 flex flex-row">
+            <div className="mt-4 grid grid-cols-3 gap-1">
                 {/* Edit */}
                 <Dialog>
-                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-green-700 text-white rounded-l-md hover:bg-green-800">
+                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-green-700 text-white rounded-md hover:bg-green-800">
                         <Edit size={15} /> Edit
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-5xl overflow-y-auto h-9/10">
@@ -62,7 +62,7 @@ export default function EventCard({ event }: { event: EventItem }) {
                 {/* Waitlist */}
                 <Link
                     to={`/organizer/waitlist/${event.id}`}
-                    className="w-full flex items-center justify-center gap-1 py-1 bg-yellow-700 text-white hover:bg-yellow-800"
+                    className="w-full flex items-center justify-center gap-1 py-1 bg-yellow-700 text-white hover:bg-yellow-800 rounded-md"
                 >
                     <Edit size={14} /> Wait List
                 </Link>
@@ -70,14 +70,14 @@ export default function EventCard({ event }: { event: EventItem }) {
                 {/* Check-in */}
                 <Link
                     to={`/checkin/${event.id}`}
-                    className="w-full flex items-center justify-center gap-1 py-1 bg-blue-700 text-white hover:bg-blue-800"
+                    className="w-full flex items-center justify-center gap-1 py-1 bg-blue-700 text-white hover:bg-blue-800 rounded-md"
                 >
                     <QrCode size={14} /> Check-in
                 </Link>
 
-                {/* Delete */}
-                <Dialog>
-                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-red-700 text-white rounded-r-md hover:bg-red-800">
+
+                {/* <Dialog>
+                    <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-red-700 text-white rounded-md hover:bg-red-800">
                         <Trash2 size={14} /> Delete
                     </DialogTrigger>
                     <DialogContent>
@@ -86,21 +86,23 @@ export default function EventCard({ event }: { event: EventItem }) {
                             <p>Event Title: <span className="font-semibold">{event.title}</span></p>
                             <div>
                                 <Button className="bg-red-700 hover:bg-red-800" onClick={() => {
-                                    deleteVenue(event.venue_id).then(() => {
-                                        deleteEvent(event.id).then(() => {
-                                            console.log("Event and venue deleted successfully");
+                                    deleteEvent(event.id).then(() => {
+                                        console.log("Event and venue deleted successfully");
+                                        deleteVenue(event.venue_id).then(() => {
+                                            console.log("Venue deleted successfully");
                                         }).catch((err) => {
-                                            console.error("Error deleting event: ", err);
+                                            console.error("Error deleting venue: ", err);
                                         });
+                                    }).catch((err) => {
+                                        console.error("Error deleting event: ", err);
                                     });
                                 }}>
                                     Delete
                                 </Button>
                             </div>
-                            <Button className="bg-red-700 hover:bg-red-800">Delete</Button>
                         </div>
                     </DialogContent>
-                </Dialog>
+                </Dialog> */}
             </div>
         </div>
     )
