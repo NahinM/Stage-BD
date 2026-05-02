@@ -25,7 +25,7 @@ export const generateAccessToken = (user) => {
     { id: user.id, username: user.username, roles: user.roles },
     jwtAccessSecret,
     {
-      expiresIn: "15m",
+      expiresIn: "12m",
     },
   );
 };

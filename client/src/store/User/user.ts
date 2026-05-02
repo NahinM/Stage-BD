@@ -7,6 +7,7 @@ interface UserState {
   user: User | null;
   userRoles: string[] | null;
   jwtToken: string | null;
+  tokenSetTime: number | null;
   setUser: (user: UserState["user"]) => void;
   setJwtToken: (jwtToken: UserState["jwtToken"]) => void;
   setUserRoles: (userRoles: UserState["userRoles"]) => void;
@@ -17,14 +18,15 @@ export const useUserStore = create<UserState>((set) => ({
   user: null,
   jwtToken: null,
   userRoles: null,
+  tokenSetTime: null,
   setUser: (user) => set({ user }),
   setJwtToken: (jwtToken) => {
-    set({ jwtToken });
+    set({ jwtToken, tokenSetTime: Date.now() });
     axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
   },
   setUserRoles: (userRoles) => set({ userRoles }),
   clearUser: () => {
-    set({ user: null, jwtToken: null, userRoles: null });
+    set({ user: null, jwtToken: null, userRoles: null, tokenSetTime: null });
     delete axios.defaults.headers.common['Authorization'];
   },
 }));
@@ -81,7 +83,12 @@ export const refreshUserIfNeeded = async () => {
 
 export const getAccessToken = async () => {
   const token = useUserStore.getState().jwtToken;
+  const timePassed = Date.now() - (useUserStore.getState().tokenSetTime || 0);
+  const tokenExpiryTime = 10 * 60 * 1000; // 10 minutes in milliseconds
   if (!token) {
+    return await refreshAccessToken();
+  }
+  if (timePassed > tokenExpiryTime) {
     return await refreshAccessToken();
   }
   return token;

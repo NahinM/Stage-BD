@@ -72,4 +72,34 @@ export const EventController = {
         res.status(500).json({ message: "Error creating venue" });
       });
   },
+  updateEvent: async (req, res) => {
+    const { id, event } = req.body;
+    EventModel.update(id, event)
+      .then((data) => {
+        res.status(200).json({
+          success: true,
+          message: "Event updated successfully",
+          data: data,
+        });
+      })
+      .catch((err) => {
+        console.error("Error updating event: ", err);
+        res.status(500).json({ message: "Error updating event" });
+      });
+  },
+  updateVenue: async (req, res) => {
+    const { id, venue } = req.body;
+    EventVenueModel.update(id, venue)
+      .then((data) => {
+        res.status(200).json({
+          success: true,
+          message: "Venue updated successfully",
+          data: data,
+        });
+      })
+      .catch((err) => {
+        console.error("Error updating venue: ", err);
+        res.status(500).json({ message: "Error updating venue" });
+      });
+  },
 };

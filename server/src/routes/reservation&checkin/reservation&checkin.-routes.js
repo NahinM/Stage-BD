@@ -12,6 +12,13 @@ app.get('/api/checkin/event/:eventId', RAC.checkin.getEventCheckins);
 app.get('/api/checkin/search/:eventId', RAC.checkin.searchEventGuests);
 app.post('/api/checkin/manual', RAC.checkin.manualCheckinByReservation);
 
+
+app.post("/api/waitlist/join", RAC.waitlist.joinWaitlistController);
+app.get("/api/waitlist/position/:eventId", RAC.waitlist.getUserPositionController);
+app.get("/api/waitlist/event/:eventId", RAC.waitlist.getEventWaitlistController);
+app.delete("/api/waitlist/cancel/:id", RAC.waitlist.cancelWaitlistController);
+app.get("/api/waitlist/organizer/events", RAC.waitlist.getOrganizerEventsController);
+
 app.get("/db-test", async (req, res) => {
 const { supabase } = await import("../config/database.js");
 
