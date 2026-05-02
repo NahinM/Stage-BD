@@ -94,7 +94,7 @@ export default function MyReservations() {
 
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">My Reservations</h1>
-                    <Button variant="outline" onClick={() => navigate("/")}>Back to home</Button>
+                    <Button variant="outline" onClick={() => navigate("/feed")}>Back to home</Button>
                 </div>
 
                 {reservations.length === 0 && (
