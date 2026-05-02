@@ -1,10 +1,11 @@
 import * as controller from "../controllers/controller.js";
 import { app } from "../config/config.js";
-import "./adittya/adittya-routes.js";
-import "./event-management/event-routes.js";
-import "./reservation&checkin/reservation&checkin.-routes.js";
-import "./user/user-routes.js";
-import "./admin/admin-routes.js";
+import './adittya/adittya-routes.js';
+import './event-management/event-routes.js';
+import './reservation&checkin/reservation&checkin.-routes.js';
+import './user/user-routes.js';
+import './engagement/engagement-routes.js';
+import './admin/admin-routes.js';
 
 app.get("/api/hello", controller.helloController.getHello);
 app.post("/api/signin", controller.signInController.signIn);

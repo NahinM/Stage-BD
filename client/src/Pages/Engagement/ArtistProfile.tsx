@@ -11,7 +11,7 @@ export default function ArtistProfile() {
     const [events, setEvents] = useState<any[]>([]);
     const [followerCount, setFollowerCount] = useState(0);
     const [voteScore, setVoteScore] = useState(0);
-    const [userVote, setUserVote] = useState<number | null>(null);
+    const [userVote, setUserVote] = useState<"UP" | "DOWN" | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -19,10 +19,9 @@ export default function ArtistProfile() {
     const currentUserId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     useEffect(() => {
-        const fetchArtistData = async () => {
+        const fetchBasicData = async () => {
             if (!artistId) return;
             setLoading(true);
-
             try {
                 // Fetch basic user profile via API
                 const profileRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/profile`);
@@ -36,42 +35,73 @@ export default function ArtistProfile() {
                 const eventsRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/events`);
                 setEvents(eventsRes.data.data || []);
 
-                // Fetch Artist Vote Score
-                try {
-                    const scoreRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/score`);
-                    setVoteScore(scoreRes.data.score || 0);
-                } catch (e) { console.error("Could not fetch score"); }
-
-                // Fetch Follow Status
-                if (currentUserId !== "00000000-0000-0000-0000-000000000000") {
-                    const statusRes = await axios.get(`http://localhost:3000/api/follows/status`, {
-                        params: { follower_id: currentUserId, followed_id: artistId }
-                    });
-                    setIsFollowing(statusRes.data.isFollowing);
-                }
-
+                // Initialize score from artist_profiles total_like column
+                setVoteScore(profileRes.data.data.total_like || 0);
             } catch (err) {
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchArtistData();
+        fetchBasicData();
+    }, [artistId]);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!artistId || currentUserId === "00000000-0000-0000-0000-000000000000") return;
+            try {
+                // Fetch Follow Status
+                const statusRes = await axios.get(`http://localhost:3000/api/follows/status`, {
+                    params: { follower_id: currentUserId, followed_id: artistId }
+                });
+                setIsFollowing(statusRes.data.isFollowing);
+
+                // Fetch user's current vote
+                const voteRes = await axios.get(`http://localhost:3000/api/artist/${artistId}/vote-status`, {
+                    params: { voter_id: currentUserId }
+                });
+                setUserVote(voteRes.data.vote_type);
+            } catch (err) {
+                console.error("Failed to fetch user specific data", err);
+            }
+        };
+        fetchUserData();
     }, [artistId, currentUserId]);
 
-    const handleVote = async (type: 1 | -1) => {
-        if (userVote === type) return;
+    const handleVote = async (type: "UP" | "DOWN") => {
+        if (!currentUserId || currentUserId === "00000000-0000-0000-0000-000000000000") {
+            alert("Please login to vote!");
+            return;
+        }
+
         const prevVote = userVote;
+        let newVote: "UP" | "DOWN" | "NONE" = type;
+        let scoreChange = 0;
+
+        if (prevVote === type) {
+            alert(type === "UP" ? "you already liked the artist" : "you already disliked the artist");
+            return;
+        } else if (prevVote !== null) {
+            // Cancel opposite vote and apply new vote
+            scoreChange = type === "UP" ? 2 : -2;
+        } else {
+            // New vote
+            scoreChange = type === "UP" ? 1 : -1;
+        }
+
         setUserVote(type);
-        setVoteScore(prev => prev + (type === 1 ? (prevVote === -1 ? 2 : 1) : (prevVote === 1 ? -2 : -1)));
+        setVoteScore(prev => prev + scoreChange);
 
         try {
             await axios.post(`http://localhost:3000/api/artist/${artistId}/vote`, {
                 voter_id: currentUserId,
-                vote_type: type
+                vote_type: newVote
             });
-        } catch {
-            setUserVote(prevVote); // rollback on fail
+        } catch (err: any) {
+            console.error("Voting failed", err);
+            setUserVote(prevVote);
+            setVoteScore(prev => prev - scoreChange);
+            alert(err.response?.data?.message || "Failed to cast vote.");
         }
     };
 
@@ -115,19 +145,19 @@ export default function ArtistProfile() {
                         {/* Reddit-Style Artist Voting Cluster */}
                         <div className="flex items-center bg-white/10 rounded-full px-2 py-1">
                             <button
-                                onClick={() => handleVote(1)}
-                                className={`p-1 rounded-full transition-colors ${userVote === 1 ? 'text-green-400 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-green-300'}`}
+                                onClick={() => handleVote("UP")}
+                                className={`p-1 rounded-full transition-colors ${userVote === "UP" ? 'text-green-500 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-green-300'}`}
                             >
-                                <ArrowBigUp className="w-6 h-6" />
+                                <ArrowBigUp className="w-6 h-6" fill={userVote === "UP" ? "currentColor" : "none"} />
                             </button>
                             <span className="font-bold text-lg px-2 min-w-[2rem] text-center">
                                 {voteScore}
                             </span>
                             <button
-                                onClick={() => handleVote(-1)}
-                                className={`p-1 rounded-full transition-colors ${userVote === -1 ? 'text-red-400 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-red-300'}`}
+                                onClick={() => handleVote("DOWN")}
+                                className={`p-1 rounded-full transition-colors ${userVote === "DOWN" ? 'text-red-500 bg-white/20' : 'text-slate-300 hover:bg-white/20 hover:text-red-300'}`}
                             >
-                                <ArrowBigDown className="w-6 h-6" />
+                                <ArrowBigDown className="w-6 h-6" fill={userVote === "DOWN" ? "currentColor" : "none"} />
                             </button>
                         </div>
                     </div>

@@ -24,7 +24,11 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     }, [initialFollowing]);
 
     const handleToggle = async () => {
-        if (!currentUserId || currentUserId === "00000000-0000-0000-0000-000000000000") return;
+        console.log("Follow button clicked by user:", currentUserId);
+        if (!currentUserId || currentUserId === "00000000-0000-0000-0000-000000000000") {
+            alert("Please login to follow artists!");
+            return;
+        }
         
         setIsLoading(true);
         try {
@@ -42,8 +46,9 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
             const newState = !isFollowing;
             setIsFollowing(newState);
             if(onFollowChange) onFollowChange(newState);
-        } catch (error) {
-            console.error("Failed to follow/unfollow", error);
+        } catch (error: any) {
+            console.error("Failed to follow/unfollow:", error.response?.data || error.message);
+            alert("Action failed: " + (error.response?.data?.error || "Server error"));
         } finally {
             setIsLoading(false);
         }
@@ -52,7 +57,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     return (
         <button
             onClick={handleToggle}
-            disabled={isLoading || !currentUserId}
+            disabled={isLoading}
             className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all duration-300 ${
                 isFollowing 
                 ? 'bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700' 

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { fetchEventDetails, fetchVenueDetails } from "./api";
 import type { EventDetails, Venue } from "./event-detail-type";
 import { useNavigate } from "react-router-dom";
+import { EventReviews } from "@/components/Engagement/EventReviews";
 import Nav from "@/components/nav";
 
 export default function EventPage() {
@@ -312,6 +313,11 @@ export default function EventPage() {
                             <p className="text-sm text-slate-600">No venue information available for this event.</p>
                         </div>
                     )}
+                </section>
+                {/* Section 6: Reviews */}
+                <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm p-6 sm:p-8">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-6">Event Reviews</h2>
+                    <EventReviews eventId={detail.id} />
                 </section>
             </div>
         </main>

@@ -67,6 +67,20 @@ export default function Nav({ pages }: { pages?: Pages[] }) {
                         >{page.name}</Link>
                     </li>
                 ))}
+                {user && (!pages || pages.length === 0 || pages.some(p => p.name === "Feed")) && (
+                    <>
+                        <li>
+                            <Link to="/recommendations"
+                                className="font-medium text-slate-700 hover:text-slate-900 px-3 py-1 rounded-md border border-slate-300 hover:border-slate-500 transition-colors bg-amber-100/50 hover:bg-amber-100"
+                            >Recommendations</Link>
+                        </li>
+                        <li>
+                            <Link to="/explore-artists"
+                                className="font-medium text-slate-700 hover:text-slate-900 px-3 py-1 rounded-md border border-slate-300 hover:border-slate-500 transition-colors bg-indigo-100/50 hover:bg-indigo-100"
+                            >Explore Artists</Link>
+                        </li>
+                    </>
+                )}
                 <li
                     className="relative min-w-[40px] h-[30px]"
                 >
