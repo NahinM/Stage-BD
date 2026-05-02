@@ -21,6 +21,8 @@ import MyReservations from "./Pages/Reservation&Checkin/my-reservations/MyReserv
 import CheckinDashboard from "./Pages/Reservation&Checkin/checkin/CheckinDashboard.tsx";
 import ScannerPage from "./Pages/Reservation&Checkin/checkin/ScannerPage.tsx";
 import Profile from "./Pages/User/profile.tsx";
+import AdminDashboard from "./Pages/admin/dashboard.tsx";
+import UserManagement from "./Pages/admin/users.tsx";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -79,11 +81,6 @@ export const router = createBrowserRouter([
     element: <EventCreate />
   },
   {
-    path: "*",
-    element: <PageNotFound />,
-  },
-
-  {
     path: "/reserve/:eventId",
     element: <ReservationPage />,
   },
@@ -102,5 +99,19 @@ export const router = createBrowserRouter([
   {
     path: "/scanner",
     element: <ScannerPage />,
+  },
+  {
+    path: "/admin/dashboard",
+    element: <AdminDashboard />,
+    children: [
+      {
+        path: "/admin/dashboard/users",
+        element: <UserManagement />
+      }
+    ]
+  },
+  {
+    path: "*",
+    element: <PageNotFound />,
   },
 ])
