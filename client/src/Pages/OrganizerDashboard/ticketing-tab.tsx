@@ -20,12 +20,7 @@ export default function TicketingTab() {
                     description="Track reservations, check-ins, and performance."
                 />
 
-                <DashboardLink
-                    to="/checkin"
-                    icon={QrCode}
-                    title="QR / Manual Check-in"
-                    description="Scan code, enter code, or find guest."
-                />
+                
 
                 
             </div>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getEventWaitlist, cancelWaitlistEntry } from "./api";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import Nav from "@/components/nav";
 
 type WaitlistEntry = {
   id: string;
@@ -42,6 +43,10 @@ export default function OrganizerWaitlist() {
   );
 
   return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <Nav />
+      <br /><br />
+      <div className="mx-auto max-w-7xl"></div>
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-4xl">
         <button
@@ -106,6 +111,7 @@ export default function OrganizerWaitlist() {
           </table>
         </div>
       </div>
+    </div>
     </div>
   );
 }

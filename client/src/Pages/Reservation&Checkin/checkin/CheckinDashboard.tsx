@@ -6,7 +6,7 @@ import {
   manualCheckinByReservation,
 } from "./api";
 import { useParams, useNavigate } from "react-router-dom";
-
+import Nav from "@/components/nav";
 type CheckinItem = {
   id: string;
   reservation_id: string;
@@ -174,6 +174,13 @@ export default function CheckinDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <Nav />
+      <br /><br />
+      <div className="mx-auto max-w-7xl"></div>
+
+    
+    <div className="min-h-screen bg-gray-50 p-6">
+      
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -394,6 +401,7 @@ export default function CheckinDashboard() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
