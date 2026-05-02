@@ -27,12 +27,7 @@ export default function TicketingTab() {
                     description="Scan code, enter code, or find guest."
                 />
 
-                <DashboardLink
-                    to="/organizer/promos"
-                    icon={BadgeDollarSign}
-                    title="Promo Codes"
-                    description="Create discounts and track usage."
-                />
+                
             </div>
         </div>
     )

@@ -1,5 +1,5 @@
 import { useCategoryStore } from "@/store/category";
-import { Edit, Users } from "lucide-react"
+import { Edit, QrCode, Users } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -64,6 +64,7 @@ export default function EventCard({ event }: { event: EventItem }) {
                     >
                         <Link to={`/organizer/waitlist/${event.id}`}> <span className="flex flex-row items-center gap-1"><Users size={14} /> Wait List</span></Link>
                     </DialogTrigger>
+                    
                     <DialogContent className="sm:max-w-3xl overflow-y-auto h-9/10">
                         <div>
                             <h1>Edit Event</h1>
@@ -74,6 +75,12 @@ export default function EventCard({ event }: { event: EventItem }) {
                     <DialogTrigger className="w-full flex items-center justify-center gap-1 py-1 bg-red-700 text-white rounded-r-md hover:bg-red-800">
                         Delete
                     </DialogTrigger>
+                    <Link
+          to={`/checkin/${event.id}`}
+          className="w-full flex items-center justify-center gap-1 py-1 bg-blue-700 text-white hover:bg-blue-800 shadow-md"
+        >
+          <QrCode size={14} /> Check-in
+        </Link>
                     <DialogContent>
                         <div className="flex flex-col items-center justify-center gap-4">
                             <h1 className="p-3 text-lg font-bold">Do you want to delete this event?</h1>

@@ -5,6 +5,7 @@ import {
   searchEventGuests,
   manualCheckinByReservation,
 } from "./api";
+import { useParams, useNavigate } from "react-router-dom";
 
 type CheckinItem = {
   id: string;
@@ -33,14 +34,15 @@ type SearchGuestItem = {
 type Mode = "qr" | "manual" | "find";
 
 export default function CheckinDashboard() {
-  const eventId = "30bbd4b7-871b-4e5d-81f1-f1e436d96b69";
+  const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
 
   const [checkins, setCheckins] = useState<CheckinItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [showActionPanel, setShowActionPanel] = useState(false);
-  const [mode, setMode] = useState<Mode>("qr");
+  const [mode, setMode] = useState<Mode>("manual");
 
   const [reservationCode, setReservationCode] = useState("");
   const [scanLoading, setScanLoading] = useState(false);
@@ -52,6 +54,17 @@ export default function CheckinDashboard() {
   const [searchLoading, setSearchLoading] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  if (!eventId) {
+    return (
+      <div className="p-8 text-red-500 text-lg">
+        No event selected.{" "}
+        <button onClick={() => navigate(-1)} className="underline text-blue-600">
+          Go back
+        </button>
+      </div>
+    );
+  }
 
   const loadCheckins = async () => {
     try {
@@ -96,18 +109,14 @@ export default function CheckinDashboard() {
       setScanMessage("");
       return;
     }
-
     try {
       setScanLoading(true);
       resetMessages();
-
       const { data } = await scanCheckin(reservationCode.trim().toUpperCase());
-
       setScanMessage(data?.message || "Check-in successful");
       setReservationCode("");
       await loadCheckins();
     } catch (err: any) {
-      console.error(err);
       setScanError(err?.response?.data?.message || "Failed to check in guest");
       setScanMessage("");
     } finally {
@@ -120,7 +129,6 @@ export default function CheckinDashboard() {
       setSearchResults([]);
       return;
     }
-
     try {
       setSearchLoading(true);
       const { data } = await searchEventGuests(eventId, searchQuery.trim());
@@ -137,14 +145,11 @@ export default function CheckinDashboard() {
     try {
       setScanLoading(true);
       resetMessages();
-
       const { data } = await manualCheckinByReservation(reservationId);
-
       setScanMessage(data?.message || "Manual check-in successful");
       await loadCheckins();
       await handleSearch();
     } catch (err: any) {
-      console.error(err);
       setScanError(err?.response?.data?.message || "Manual check-in failed");
     } finally {
       setScanLoading(false);
@@ -163,8 +168,6 @@ export default function CheckinDashboard() {
     return fullName || guest.username || "Guest";
   };
 
-  const formatDate = (date: string) => new Date(date).toLocaleString();
-
   if (loading) {
     return <div className="p-8 text-lg font-medium">Loading dashboard...</div>;
   }
@@ -175,21 +178,26 @@ export default function CheckinDashboard() {
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Organizer Check-in Dashboard
+              Check-in Dashboard
             </h1>
-            <p className="mt-1 text-gray-500">
-              QR scan, manual code entry, and guest search fallback
+            <p className="mt-1 text-gray-500 text-sm break-all">
+              Event: <span className="font-mono font-semibold text-gray-700">{eventId}</span>
             </p>
           </div>
 
           <div className="flex gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="rounded-xl bg-gray-200 px-4 py-2 text-gray-700 shadow hover:bg-gray-300"
+            >
+              ← Back
+            </button>
             <button
               onClick={toggleActionPanel}
               className="rounded-xl bg-green-600 px-4 py-2 text-white shadow hover:bg-green-700"
             >
               {showActionPanel ? "Close Check-in Tools" : "Open Check-in Tools"}
             </button>
-
             <button
               onClick={loadCheckins}
               className="rounded-xl bg-black px-4 py-2 text-white shadow hover:opacity-90"
@@ -204,33 +212,19 @@ export default function CheckinDashboard() {
             <div className="mb-5 flex flex-wrap gap-3">
               <button
                 onClick={() => setMode("qr")}
-                className={`rounded-xl px-4 py-2 ${
-                  mode === "qr"
-                    ? "bg-black text-white"
-                    : "bg-gray-100 text-gray-700"
-                }`}
+                className={`rounded-xl px-4 py-2 ${mode === "qr" ? "bg-black text-white" : "bg-gray-100 text-gray-700"}`}
               >
                 Scan QR
               </button>
-
               <button
                 onClick={() => setMode("manual")}
-                className={`rounded-xl px-4 py-2 ${
-                  mode === "manual"
-                    ? "bg-black text-white"
-                    : "bg-gray-100 text-gray-700"
-                }`}
+                className={`rounded-xl px-4 py-2 ${mode === "manual" ? "bg-black text-white" : "bg-gray-100 text-gray-700"}`}
               >
                 Manual Code
               </button>
-
               <button
                 onClick={() => setMode("find")}
-                className={`rounded-xl px-4 py-2 ${
-                  mode === "find"
-                    ? "bg-black text-white"
-                    : "bg-gray-100 text-gray-700"
-                }`}
+                className={`rounded-xl px-4 py-2 ${mode === "find" ? "bg-black text-white" : "bg-gray-100 text-gray-700"}`}
               >
                 Find Guest
               </button>
@@ -240,8 +234,7 @@ export default function CheckinDashboard() {
               <div className="rounded-xl bg-gray-50 p-5">
                 <h2 className="text-xl font-semibold">QR Scanner</h2>
                 <p className="mt-2 text-sm text-gray-600">
-                  Keep this button and section for the upcoming QR camera scanner.
-                  For now, use Manual Code or Find Guest.
+                  QR camera scanner coming soon. Use Manual Code or Find Guest for now.
                 </p>
                 <div className="mt-4 rounded-xl border border-dashed p-6 text-center text-gray-500">
                   QR scanner placeholder
@@ -252,17 +245,16 @@ export default function CheckinDashboard() {
             {mode === "manual" && (
               <div>
                 <h2 className="mb-4 text-xl font-semibold">Manual Code Check-in</h2>
-
                 <div className="flex flex-col gap-3 md:flex-row">
                   <input
                     ref={inputRef}
                     type="text"
                     value={reservationCode}
                     onChange={(e) => setReservationCode(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleManualCheckin()}
                     placeholder="Enter reservation code"
                     className="flex-1 rounded-xl border px-4 py-3 outline-none focus:border-green-500"
                   />
-
                   <button
                     onClick={handleManualCheckin}
                     disabled={scanLoading}
@@ -277,17 +269,16 @@ export default function CheckinDashboard() {
             {mode === "find" && (
               <div>
                 <h2 className="mb-4 text-xl font-semibold">Find Guest</h2>
-
                 <div className="flex flex-col gap-3 md:flex-row">
                   <input
                     ref={inputRef}
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Search by name, email, phone, or reservation code"
                     className="flex-1 rounded-xl border px-4 py-3 outline-none focus:border-green-500"
                   />
-
                   <button
                     onClick={handleSearch}
                     disabled={searchLoading}
@@ -299,30 +290,22 @@ export default function CheckinDashboard() {
 
                 <div className="mt-4 space-y-3">
                   {searchResults.map((guest) => (
-                    <div
-                      key={guest.reservation_id}
-                      className="rounded-xl border p-4"
-                    >
+                    <div key={guest.reservation_id} className="rounded-xl border p-4">
                       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                          <div className="font-semibold">
-                            {getGuestName(guest)}
-                          </div>
+                          <div className="font-semibold">{getGuestName(guest)}</div>
+                          <div className="text-sm text-gray-500">Code: {guest.reservation_code || "N/A"}</div>
+                          <div className="text-sm text-gray-500">Email: {guest.email || "N/A"}</div>
+                          <div className="text-sm text-gray-500">Phone: {guest.phone || "N/A"}</div>
                           <div className="text-sm text-gray-500">
-                            Code: {guest.reservation_code || "N/A"}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Email: {guest.email || "N/A"}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Phone: {guest.phone || "N/A"}
+                            Status:{" "}
+                            <span className={`font-medium ${guest.status === "confirmed" ? "text-green-600" : "text-gray-500"}`}>
+                              {guest.status}
+                            </span>
                           </div>
                         </div>
-
                         <button
-                          onClick={() =>
-                            handleManualCheckinFromSearch(guest.reservation_id)
-                          }
+                          onClick={() => handleManualCheckinFromSearch(guest.reservation_id)}
                           disabled={scanLoading}
                           className="rounded-xl bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
                         >
@@ -332,26 +315,23 @@ export default function CheckinDashboard() {
                     </div>
                   ))}
 
-                  {!searchLoading &&
-                    searchQuery.trim() &&
-                    searchResults.length === 0 && (
-                      <div className="rounded-xl border border-dashed p-4 text-gray-500">
-                        No guests found for this event.
-                      </div>
-                    )}
+                  {!searchLoading && searchQuery.trim() && searchResults.length === 0 && (
+                    <div className="rounded-xl border border-dashed p-4 text-gray-500">
+                      No guests found for this event.
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {scanMessage && (
               <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-green-700">
-                {scanMessage}
+                ✓ {scanMessage}
               </div>
             )}
-
             {scanError && (
               <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-red-600">
-                {scanError}
+                ✗ {scanError}
               </div>
             )}
           </div>
@@ -366,16 +346,12 @@ export default function CheckinDashboard() {
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
             <p className="text-sm font-medium text-gray-500">Total Checked In</p>
-            <h2 className="mt-2 text-4xl font-bold text-green-600">
-              {totalCheckedIn}
-            </h2>
+            <h2 className="mt-2 text-4xl font-bold text-green-600">{totalCheckedIn}</h2>
           </div>
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
             <p className="text-sm font-medium text-gray-500">Event ID</p>
-            <h2 className="mt-2 break-all text-sm font-semibold text-gray-800">
-              {eventId}
-            </h2>
+            <h2 className="mt-2 break-all text-sm font-semibold text-gray-800">{eventId}</h2>
           </div>
 
           <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -383,8 +359,40 @@ export default function CheckinDashboard() {
             <h2 className="mt-2 text-xl font-bold text-gray-900">
               {latestGuest ? getGuestName(latestGuest) : "No arrivals yet"}
             </h2>
+            {latestGuest && (
+              <p className="text-xs text-gray-400 mt-1">
+                {new Date(latestGuest.checked_in_at).toLocaleString()}
+              </p>
+            )}
           </div>
         </div>
+
+        {/* Checkins list */}
+        {checkins.length > 0 && (
+          <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold">Checked-in Guests</h2>
+            </div>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="text-left px-4 py-2 text-gray-500 font-medium">Guest</th>
+                  <th className="text-left px-4 py-2 text-gray-500 font-medium">Code</th>
+                  <th className="text-left px-4 py-2 text-gray-500 font-medium">Checked in at</th>
+                </tr>
+              </thead>
+              <tbody>
+                {checkins.map((c) => (
+                  <tr key={c.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium">{getGuestName(c)}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-600">{c.reservation_code || "N/A"}</td>
+                    <td className="px-4 py-3 text-gray-500">{new Date(c.checked_in_at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

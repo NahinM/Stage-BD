@@ -96,13 +96,10 @@ export const router = createBrowserRouter([
     element: <MyReservations />,
   },
   {
-    path: "/checkin",
+    path: "/checkin/:eventId",
     element: <CheckinDashboard />,
   },
-  {
-    path: "/scanner",
-    element: <ScannerPage />,
-  },
+  
   {
     path: "/admin/dashboard",
     element: <AdminDashboard />,
