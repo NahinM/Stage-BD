@@ -147,7 +147,7 @@ export const router = createBrowserRouter([
     element: <OrganizerDashboard />,
   },
   { path: "/organizer/waitlist/:eventId", element: <OrganizerWaitlist /> },
-  { path: "/organizer/events", element: <OrganizerEventList /> },
+
   { path: "/organizer/contests", element: <OrganizerContests /> }
 
 ])
