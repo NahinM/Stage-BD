@@ -50,10 +50,7 @@ export default function OrganizerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <Nav pages={[
-        { name: "Home", href: "/" },
-        { name: "Feed", href: "/feed" }
-      ]} />
+      <Nav />
       <br /><br />
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

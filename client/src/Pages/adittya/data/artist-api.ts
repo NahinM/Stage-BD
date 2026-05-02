@@ -71,7 +71,7 @@ const dedupeWorks = (works: WorkItem[]): WorkItem[] => {
 
 export const fetchArtists = async (): Promise<ArtistCardItem[]> => {
   try {
-    const { data } = await axios.get("/api/adittya/artists");
+    const { data } = await axios.get("http://localhost:3000/api/adittya/artists");
     const dbArtists = data.data || [];
 
     const merged = [...staticArtists.map(normalizeStaticArtist), ...dbArtists];
@@ -97,7 +97,7 @@ export const fetchArtistDetails = async (username: string): Promise<ArtistDetail
   );
 
   try {
-    const { data } = await axios.get(`/api/adittya/artists/${username}`);
+    const { data } = await axios.get(`http://localhost:3000/api/adittya/artists/${username}`);
     const dbArtist = data.data;
 
     if (!dbArtist && staticArtist) {
@@ -138,7 +138,7 @@ export const fetchArtistDetails = async (username: string): Promise<ArtistDetail
 
 export const fetchShowcaseItems = async (): Promise<ShowcaseItem[]> => {
   try {
-    const { data } = await axios.get("/api/adittya/showcase");
+    const { data } = await axios.get("http://localhost:3000/api/adittya/showcase");
     const dbItems = data.data || [];
 
     const merged = [...staticShowcaseArtworks, ...dbItems];
@@ -164,7 +164,7 @@ export const saveArtistProfile = async (payload: {
   genres: string;
   social_links: Record<string, string>;
 }) => {
-  const { data } = await axios.post("/api/adittya/profile", payload);
+  const { data } = await axios.post("http://localhost:3000/api/adittya/profile", payload);
   return data;
 };
 
@@ -174,7 +174,7 @@ export const addArtistWork = async (payload: {
   category: string;
   media_url: string;
 }) => {
-  const { data } = await axios.post("/api/adittya/media", payload);
+  const { data } = await axios.post("http://localhost:3000/api/adittya/media", payload);
   return data;
 };
 
@@ -187,7 +187,7 @@ export const updateArtistWork = async (
     media_url: string;
   }
 ) => {
-  const { data } = await axios.put(`/api/adittya/media/${mediaId}`, payload);
+  const { data } = await axios.put(`http://localhost:3000/api/adittya/media/${mediaId}`, payload);
   return data;
 };
 
@@ -195,6 +195,6 @@ export const followArtist = async (payload: {
   follower_username: string;
   followed_username: string;
 }) => {
-  const { data } = await axios.post("/api/adittya/follow", payload);
+  const { data } = await axios.post("http://localhost:3000/api/adittya/follow", payload);
   return data;
 };

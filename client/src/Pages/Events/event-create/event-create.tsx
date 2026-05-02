@@ -78,10 +78,7 @@ export default function EventCreate() {
     }
     return (
         <div>
-            <Nav pages={[
-                { name: "Home", href: "/" },
-                { name: "Feed", href: "/feed" }
-            ]} />
+            <Nav />
             <br /><br />
             <div className="relative my-10">
                 <h1 className="relative text-4xl font-bold text-center mx-auto max-w-2xl p-3 bg-orange-200 rounded-lg shadow-lg shadow-orange-500/50 z-10">Create a New Event</h1>

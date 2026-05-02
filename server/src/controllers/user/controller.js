@@ -86,6 +86,24 @@ export const UserController = {
         res.status(500).json({ message: "Error retrieving user" });
       });
   },
+  getAll: async (req, res) => {
+    const authResult = await authorize(req.headers);
+    if (!authResult) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const roles = authResult.roles || [];
+    if (!roles.includes("admin")) {
+      return res.status(403).json({ message: "Forbidden: Admins only" });
+    }
+    UserModel.read()
+      .then((data) => {
+        res.status(200).json(data);
+      })
+      .catch((err) => {
+        console.error("Error retrieving users: ", err);
+        res.status(500).json({ message: "Error retrieving users" });
+      });
+  },
   update: async (req, res) => {
     // console.log("Received request to update user with data:", req.body);
     const authResult = await authorize(req.headers);
