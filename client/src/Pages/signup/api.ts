@@ -59,6 +59,7 @@ export const handleSignUp = async (signUpdata: SignUpData) => {
         city: signUpdata.city,
     };
 
+
     axios.post("/api/signup", filteredData).then((res) => {
         toast.success(toastBody("Sign up successful", ["Please log in."]), { position: "top-center" });
         console.log("Sign up successful:", res.data);

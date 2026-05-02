@@ -82,9 +82,36 @@ export default function EventPage() {
         return value.length >= 5 ? value.slice(0, 5) : value;
     };
 
+    const getYouTubeEmbedUrl = (value: string) => {
+        try {
+            const parsedUrl = new URL(value);
+
+            if (parsedUrl.hostname.includes("youtu.be")) {
+                const videoId = parsedUrl.pathname.split("/").filter(Boolean)[0];
+                return videoId ? `https://www.youtube.com/embed/${videoId}` : value;
+            }
+
+            if (parsedUrl.hostname.includes("youtube.com")) {
+                if (parsedUrl.pathname === "/watch") {
+                    const videoId = parsedUrl.searchParams.get("v");
+                    return videoId ? `https://www.youtube.com/embed/${videoId}` : value;
+                }
+
+                if (parsedUrl.pathname.startsWith("/embed/")) {
+                    return value;
+                }
+            }
+        } catch {
+            return value;
+        }
+
+        return value;
+    };
+
     const isSoldOut = detail.seat_limit !== null && detail.seats_reserved >= detail.seat_limit;
     const seatsLeft = detail.seat_limit !== null ? Math.max(detail.seat_limit - detail.seats_reserved, 0) : 0;
     const shareLink = `${window.location.origin}/event/${detail.id}`;
+    const embedLink = detail.streaming_link ? getYouTubeEmbedUrl(detail.streaming_link) : null;
 
     const handleCopyLink = async () => {
         try {
@@ -129,6 +156,23 @@ export default function EventPage() {
                             </span>
                         </div>
                     </div>
+                </section>
+                {/* streamind section */}
+                <section>
+                    {embedLink && (
+                        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm p-6 sm:p-8">
+                            <h2 className="text-lg font-semibold text-slate-900 mb-4 text-center">Live Stream</h2>
+                            <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black">
+                                <iframe
+                                    className="h-full w-full"
+                                    src={embedLink}
+                                    title="YouTube video player"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
+                        </div>
+                    )}
                 </section>
 
                 {/* Section 2: Sharing Section */}

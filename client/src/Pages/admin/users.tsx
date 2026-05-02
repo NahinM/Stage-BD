@@ -37,9 +37,7 @@ export default function UserManagement() {
 
     return (
         <div className="p-4 w-full">
-            <h2>User Management</h2>
-            <p>Here you can manage all users of the platform.</p>
-            {/* User management functionalities will go here */}
+            <h2 className="text-center text-xl font-bold border-b p-2">User Management</h2>
             <Table>
                 <TableCaption>A list of your recent users.</TableCaption>
                 <TableHeader>
@@ -59,7 +57,7 @@ export default function UserManagement() {
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell className="text-right">
                                     <Dialog>
-                                        <DialogTrigger className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Detail</DialogTrigger>
+                                        <DialogTrigger className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-4 rounded">Detail</DialogTrigger>
                                         <DialogContent>
                                             <UserDetail user={user} />
                                         </DialogContent>

@@ -130,4 +130,56 @@ export const UserController = {
           .json({ message: "Error updating user", error: err.message });
       });
   },
+  addRole: async (req, res) => {
+    const authResult = await authorize(req.headers);
+    if (!authResult) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const roles = authResult.roles || [];
+    if (!roles.includes("admin")) {
+      return res.status(403).json({ message: "Forbidden: Admins only" });
+    }
+    const { userID, role } = req.body;
+    if (!userID || !role) {
+      return res.status(400).json({ message: "User ID and role are required" });
+    }
+    UserRoleModel.add(userID, role)
+      .then((data) => {
+        res
+          .status(200)
+          .json({ message: "Role added successfully", data: data[0] });
+      })
+      .catch((err) => {
+        console.error("Error adding role: ", err);
+        res
+          .status(500)
+          .json({ message: "Error adding role", error: err.message });
+      });
+  },
+  deleteRole: async (req, res) => {
+    const authResult = await authorize(req.headers);
+    if (!authResult) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const roles = authResult.roles || [];
+    if (!roles.includes("admin")) {
+      return res.status(403).json({ message: "Forbidden: Admins only" });
+    }
+    const { userID, role } = req.body;
+    if (!userID || !role) {
+      return res.status(400).json({ message: "User ID and role are required" });
+    }
+    UserRoleModel.delete(userID, role)
+      .then((data) => {
+        res
+          .status(200)
+          .json({ message: "Role deleted successfully", data: data[0] });
+      })
+      .catch((err) => {
+        console.error("Error deleting role: ", err);
+        res
+          .status(500)
+          .json({ message: "Error deleting role", error: err.message });
+      });
+  },
 };
