@@ -102,4 +102,48 @@ export const EventController = {
         res.status(500).json({ message: "Error updating venue" });
       });
   },
+  deleteEvent: async (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+      console.warn("Event deletion attempted without ID");
+      return res
+        .status(400)
+        .json({ success: false, message: "Event ID is required" });
+    }
+    console.log("Received event ID for deletion: ", id);
+    EventModel.delete(id)
+      .then((data) => {
+        res.status(200).json({
+          success: true,
+          message: "Event deleted successfully",
+          data: data,
+        });
+      })
+      .catch((err) => {
+        console.error("Error deleting event: ", err);
+        res.status(500).json({ message: "Error deleting event" });
+      });
+  },
+  deleteVenue: async (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+      console.warn("Venue deletion attempted without ID");
+      return res
+        .status(400)
+        .json({ success: false, message: "Venue ID is required" });
+    }
+    console.log("Received request to delete venue with ID: ", id);
+    EventVenueModel.delete(id)
+      .then((data) => {
+        res.status(200).json({
+          success: true,
+          message: "Venue deleted successfully",
+          data: data,
+        });
+      })
+      .catch((err) => {
+        console.error("Error deleting venue: ", err);
+        res.status(500).json({ message: "Error deleting venue" });
+      });
+  },
 };

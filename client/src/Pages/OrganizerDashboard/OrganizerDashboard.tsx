@@ -1,10 +1,4 @@
-import { use, useMemo, useState } from "react";
-import {
-  CalendarPlus,
-  Ticket,
-  QrCode,
-  BadgeDollarSign,
-} from "lucide-react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventsTab from "./events/events-tab";
 import TicketingTab from "./ticketing-tab";
@@ -17,32 +11,6 @@ export default function OrganizerDashboard() {
   const [loading] = useState(false);
   const [error] = useState("");
   const user = useUserStore((state) => state.user);
-
-  const stats = useMemo(
-    () => [
-      {
-        label: "Total Events",
-        value: "12",
-        icon: CalendarPlus,
-      },
-      {
-        label: "Reservations",
-        value: "348",
-        icon: Ticket,
-      },
-      {
-        label: "Checked In",
-        value: "219",
-        icon: QrCode,
-      },
-      {
-        label: "Promo Uses",
-        value: "74",
-        icon: BadgeDollarSign,
-      },
-    ],
-    []
-  );
 
   if (loading) {
     return <div className="p-8 text-lg font-medium">Loading dashboard...</div>;
