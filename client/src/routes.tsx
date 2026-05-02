@@ -26,6 +26,8 @@ import ContestHub from "./Pages/Contests/ContestHub.tsx";
 import ContestDetail from "./Pages/Contests/ContestDetail.tsx";
 import RecommendationsFeed from "./Pages/Engagement/RecommendationsFeed.tsx";
 
+import AdminDashboard from "./Pages/admin/dashboard.tsx";
+import UserManagement from "./Pages/admin/users.tsx";
 import OrganizerDashboard from "./Pages/OrganizerDashboard/OrganizerDashboard.tsx";
 import OrganizerWaitlist from "./Pages/waitlist/OrganizerWaitlist.tsx";
 import OrganizerEventList from "./Pages/waitlist/OrganizerEventList.tsx";
@@ -88,11 +90,6 @@ export const router = createBrowserRouter([
     element: <EventCreate />
   },
   {
-    path: "*",
-    element: <PageNotFound />,
-  },
-
-  {
     path: "/reserve/:eventId",
     element: <ReservationPage />,
   },
@@ -111,6 +108,20 @@ export const router = createBrowserRouter([
   {
     path: "/scanner",
     element: <ScannerPage />,
+  },
+  {
+    path: "/admin/dashboard",
+    element: <AdminDashboard />,
+    children: [
+      {
+        path: "/admin/dashboard/users",
+        element: <UserManagement />
+      }
+    ]
+  },
+  {
+    path: "*",
+    element: <PageNotFound />,
   },
 
   // toha's path
