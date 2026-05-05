@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
-import { staticSponsorListings } from "../data/sponsor-data";
+import { useEffect, useMemo, useState } from "react";
+import {
+  staticSponsorListings,
+  type SponsorListing,
+} from "../data/sponsor-data";
+import { refreshUserIfNeeded, useUserStore } from "@/store/User/user";
 
 type SponsorshipRequest = {
   id: string;
@@ -7,31 +11,63 @@ type SponsorshipRequest = {
   sponsor_id: string;
   message: string;
   status: string;
+  requested_amount?: number | null;
   created_at: string;
 };
 
 export default function SponsorListings() {
   const sponsors = staticSponsorListings;
+  const user = useUserStore((state) => state.user);
+  const userRoles = useUserStore((state) => state.userRoles);
 
-  const [selectedSponsor, setSelectedSponsor] = useState<string | null>(null);
-  const [artistName, setArtistName] = useState("");
+  const [selectedSponsor, setSelectedSponsor] =
+    useState<SponsorListing | null>(null);
   const [projectTitle, setProjectTitle] = useState("");
+  const [requestedAmount, setRequestedAmount] = useState("");
   const [message, setMessage] = useState("");
   const [requestSent, setRequestSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const [lookupUsername, setLookupUsername] = useState("sujit_mustafa");
   const [requests, setRequests] = useState<SponsorshipRequest[]>([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [requestsError, setRequestsError] = useState("");
+  const [userLoading, setUserLoading] = useState(true);
 
-  const isArtist = true;
+  const username = user?.username || "";
 
-  function openRequestModal(sponsorName: string) {
-    setSelectedSponsor(sponsorName);
-    setArtistName(lookupUsername || "");
+  const isArtist = useMemo(() => {
+    return (
+      Array.isArray(userRoles) &&
+      userRoles.some((role) => String(role).toLowerCase() === "artist")
+    );
+  }, [userRoles]);
+
+  async function loadLoggedInUser() {
+    try {
+      setUserLoading(true);
+      await refreshUserIfNeeded();
+    } catch (error) {
+      console.error("Failed to refresh logged-in user:", error);
+    } finally {
+      setUserLoading(false);
+    }
+  }
+
+  function openRequestModal(sponsor: SponsorListing) {
+    if (!username) {
+      alert("Please sign in first.");
+      return;
+    }
+
+    if (!isArtist) {
+      alert("Only users with artist role can request sponsorship.");
+      return;
+    }
+
+    setSelectedSponsor(sponsor);
     setProjectTitle("");
+    setRequestedAmount("");
     setMessage("");
     setRequestSent(false);
     setSubmitError("");
@@ -40,14 +76,15 @@ export default function SponsorListings() {
   function closeModal() {
     setSelectedSponsor(null);
     setProjectTitle("");
+    setRequestedAmount("");
     setMessage("");
     setRequestSent(false);
     setSubmitError("");
     setIsSubmitting(false);
   }
 
-  async function fetchRequests(username: string) {
-    if (!username) {
+  async function fetchRequests(currentUsername: string) {
+    if (!currentUsername || !isArtist) {
       setRequests([]);
       return;
     }
@@ -57,7 +94,7 @@ export default function SponsorListings() {
       setRequestsError("");
 
       const response = await fetch(
-        `/api/adittya/sponsorship-request/${username}`
+        `/api/adittya/sponsorship-request/${currentUsername}`
       );
       const result = await response.json();
 
@@ -77,14 +114,49 @@ export default function SponsorListings() {
   }
 
   useEffect(() => {
-    fetchRequests(lookupUsername);
+    loadLoggedInUser();
   }, []);
+
+  useEffect(() => {
+    if (username && isArtist) {
+      fetchRequests(username);
+    } else {
+      setRequests([]);
+    }
+  }, [username, isArtist]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!artistName || !selectedSponsor || !message) {
-      setSubmitError("Artist username, sponsor, and message are required.");
+    if (!username) {
+      setSubmitError("Please sign in first.");
+      return;
+    }
+
+    if (!isArtist) {
+      setSubmitError("Only users with artist role can request sponsorship.");
+      return;
+    }
+
+    if (!selectedSponsor || !projectTitle.trim() || !message.trim()) {
+      setSubmitError("Sponsor, project title, and message are required.");
+      return;
+    }
+
+    const amountNumber = Number(requestedAmount);
+
+    if (!amountNumber || amountNumber <= 0) {
+      setSubmitError("Please enter a valid requested amount.");
+      return;
+    }
+
+    if (
+      amountNumber < selectedSponsor.minBudget ||
+      amountNumber > selectedSponsor.maxBudget
+    ) {
+      setSubmitError(
+        `Requested amount must be within ${selectedSponsor.budgetRange}.`
+      );
       return;
     }
 
@@ -98,9 +170,11 @@ export default function SponsorListings() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          artist_username: artistName,
-          sponsor_name: selectedSponsor,
-          message: `Project Title: ${projectTitle}\n\n${message}`,
+          artist_username: username,
+          requesting_username: username,
+          sponsor_name: selectedSponsor.sponsorName,
+          requested_amount: amountNumber,
+          message: `Project Title: ${projectTitle}\nRequested Amount: ৳${amountNumber.toLocaleString()}\n\n${message}`,
         }),
       });
 
@@ -110,8 +184,7 @@ export default function SponsorListings() {
         throw new Error(result.message || "Failed to send sponsorship request.");
       }
 
-      setLookupUsername(artistName);
-      await fetchRequests(artistName);
+      await fetchRequests(username);
       setRequestSent(true);
     } catch (error) {
       setSubmitError(
@@ -130,20 +203,44 @@ export default function SponsorListings() {
     }
   }
 
+  function formatAmount(value?: number | null) {
+    if (value === null || value === undefined) return "N/A";
+    return `৳${Number(value).toLocaleString()}`;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8">
       <div className="mx-auto max-w-6xl">
         <h1 className="mb-2 text-3xl font-bold text-gray-900">
           Sponsor / Patron Listings
         </h1>
+
         <p className="mb-2 text-sm text-gray-600">
           Browse potential sponsors and patrons for artist growth, events, and
           creative collaborations.
         </p>
 
-        <p className="mb-8 text-sm text-gray-500">
+        <p className="mb-4 text-sm text-gray-500">
           Sponsorship request access is available only for artist accounts.
         </p>
+
+        <div className="mb-8 rounded-2xl border bg-white px-5 py-4 text-sm text-gray-700 shadow-sm">
+          {userLoading ? (
+            <span>Checking signed-in user...</span>
+          ) : username && isArtist ? (
+            <span>
+              Signed in as artist:{" "}
+              <span className="font-semibold">{username}</span>
+            </span>
+          ) : username && !isArtist ? (
+            <span>
+              Signed in as <span className="font-semibold">{username}</span>,
+              but this account does not have artist permission.
+            </span>
+          ) : (
+            <span>Sign in as an artist to request sponsorship.</span>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {sponsors.map((sponsor) => (
@@ -183,7 +280,9 @@ export default function SponsorListings() {
               </div>
 
               <div className="mb-3">
-                <p className="text-sm font-medium text-gray-800">Budget Range</p>
+                <p className="text-sm font-medium text-gray-800">
+                  Budget Range
+                </p>
                 <p className="text-sm text-gray-600">{sponsor.budgetRange}</p>
               </div>
 
@@ -204,8 +303,9 @@ export default function SponsorListings() {
               </div>
 
               <button
-                onClick={() => openRequestModal(sponsor.sponsorName)}
-                className="w-full rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                onClick={() => openRequestModal(sponsor)}
+                disabled={!username || !isArtist}
+                className="w-full rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Request Sponsorship
               </button>
@@ -213,79 +313,73 @@ export default function SponsorListings() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-2xl border bg-white p-6 shadow-sm">
-          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
+        {username && isArtist && (
+          <div className="mt-10 rounded-2xl border bg-white p-6 shadow-sm">
+            <div className="mb-4">
               <h2 className="text-2xl font-bold text-gray-900">
                 My Sponsorship Requests
               </h2>
               <p className="text-sm text-gray-600">
-                View previously submitted sponsorship requests.
+                View only the sponsorship requests submitted by your own artist
+                account.
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={lookupUsername}
-                onChange={(e) => setLookupUsername(e.target.value)}
-                placeholder="Enter artist username"
-                className="rounded-xl border px-4 py-2 text-sm outline-none"
-              />
-              <button
-                onClick={() => fetchRequests(lookupUsername)}
-                className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white"
-              >
-                Load Requests
-              </button>
-            </div>
-          </div>
-
-          {isLoadingRequests ? (
-            <p className="text-sm text-gray-600">Loading requests...</p>
-          ) : requestsError ? (
-            <p className="text-sm text-red-600">{requestsError}</p>
-          ) : requests.length === 0 ? (
-            <p className="text-sm text-gray-600">
-              No sponsorship requests found for this artist.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                      Message
-                    </th>
-                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                      Created
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.map((request) => (
-                    <tr key={request.id} className="border-b last:border-b-0">
-                      <td className="px-4 py-3 text-sm text-gray-800 whitespace-pre-line">
-                        {request.message}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                          {request.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {formatDate(request.created_at)}
-                      </td>
+            {isLoadingRequests ? (
+              <p className="text-sm text-gray-600">Loading requests...</p>
+            ) : requestsError ? (
+              <p className="text-sm text-red-600">{requestsError}</p>
+            ) : requests.length === 0 ? (
+              <p className="text-sm text-gray-600">
+                No sponsorship requests found for your artist account.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="px-4 py-3 text-sm font-semibold text-gray-700">
+                        Message
+                      </th>
+                      <th className="px-4 py-3 text-sm font-semibold text-gray-700">
+                        Requested Amount
+                      </th>
+                      <th className="px-4 py-3 text-sm font-semibold text-gray-700">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-sm font-semibold text-gray-700">
+                        Created
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {requests.map((request) => (
+                      <tr
+                        key={request.id}
+                        className="border-b last:border-b-0"
+                      >
+                        <td className="px-4 py-3 text-sm text-gray-800 whitespace-pre-line">
+                          {request.message}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {formatAmount(request.requested_amount)}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                            {request.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {formatDate(request.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {selectedSponsor && (
@@ -299,7 +393,10 @@ export default function SponsorListings() {
 
                 <p className="mb-6 text-sm text-gray-600">
                   Send a sponsorship request to{" "}
-                  <span className="font-semibold">{selectedSponsor}</span>.
+                  <span className="font-semibold">
+                    {selectedSponsor.sponsorName}
+                  </span>
+                  .
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -307,14 +404,18 @@ export default function SponsorListings() {
                     <label className="mb-1 block text-sm font-medium text-gray-800">
                       Artist Username
                     </label>
-                    <input
-                      type="text"
-                      value={artistName}
-                      onChange={(e) => setArtistName(e.target.value)}
-                      className="w-full rounded-xl border px-4 py-2 text-sm outline-none"
-                      placeholder="Enter your artist username"
-                      required
-                    />
+                    <div className="w-full rounded-xl border bg-gray-50 px-4 py-2 text-sm text-gray-700">
+                      {username}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-800">
+                      Sponsor Budget Range
+                    </label>
+                    <div className="w-full rounded-xl border bg-gray-50 px-4 py-2 text-sm text-gray-700">
+                      {selectedSponsor.budgetRange}
+                    </div>
                   </div>
 
                   <div>
@@ -327,6 +428,22 @@ export default function SponsorListings() {
                       onChange={(e) => setProjectTitle(e.target.value)}
                       className="w-full rounded-xl border px-4 py-2 text-sm outline-none"
                       placeholder="Enter your project title"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-800">
+                      Requested Amount
+                    </label>
+                    <input
+                      type="number"
+                      value={requestedAmount}
+                      onChange={(e) => setRequestedAmount(e.target.value)}
+                      className="w-full rounded-xl border px-4 py-2 text-sm outline-none"
+                      placeholder={`Between ${selectedSponsor.minBudget} and ${selectedSponsor.maxBudget}`}
+                      min={selectedSponsor.minBudget}
+                      max={selectedSponsor.maxBudget}
                       required
                     />
                   </div>
@@ -374,7 +491,10 @@ export default function SponsorListings() {
                 </h2>
                 <p className="mb-4 text-sm text-gray-700">
                   Your sponsorship request has been sent to{" "}
-                  <span className="font-semibold">{selectedSponsor}</span>.
+                  <span className="font-semibold">
+                    {selectedSponsor.sponsorName}
+                  </span>
+                  .
                 </p>
                 <p className="mb-6 text-sm text-gray-600">
                   The request has been stored through the backend route.

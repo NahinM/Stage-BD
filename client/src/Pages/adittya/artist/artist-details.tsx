@@ -2,13 +2,15 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   addArtistWork,
+  createCrowdfundingCampaign,
   fetchArtistDetails,
-  followArtist,
   saveArtistProfile,
+  updateArtistCoverImage,
   updateArtistWork,
   type ArtistDetail,
   type WorkItem,
 } from "../data/artist-api";
+import { refreshUserIfNeeded, useUserStore } from "@/store/User/user";
 
 type WorkForm = {
   title: string;
@@ -16,22 +18,36 @@ type WorkForm = {
   media_url: string;
 };
 
+type CampaignForm = {
+  title: string;
+  description: string;
+  goal_amount: string;
+  deadline: string;
+};
+
 export default function ArtistDetails() {
   const { id } = useParams();
   const username = id || "";
 
+  const user = useUserStore((state) => state.user);
+
   const [artist, setArtist] = useState<ArtistDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [addingWork, setAddingWork] = useState(false);
   const [editingWork, setEditingWork] = useState<WorkItem | null>(null);
   const [savingEditWork, setSavingEditWork] = useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [savingCoverImage, setSavingCoverImage] = useState(false);
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     bio: "",
     genres: "",
     instagram: "",
     portfolio: "",
+    youtube: "",
   });
 
   const [newWork, setNewWork] = useState<WorkForm>({
@@ -46,29 +62,45 @@ export default function ArtistDetails() {
     media_url: "",
   });
 
-  let loggedInUser: { username?: string; role?: string } | null = null;
-  try {
-    loggedInUser = JSON.parse(
-      localStorage.getItem("loggedInUser") ||
-        localStorage.getItem("user") ||
-        "null"
-    );
-  } catch {
-    loggedInUser = null;
-  }
+  const [campaignForm, setCampaignForm] = useState<CampaignForm>({
+    title: "",
+    description: "",
+    goal_amount: "",
+    deadline: "",
+  });
+
+  const loggedInUsername = user?.username || "";
 
   const canManageProfile =
-    !!loggedInUser && loggedInUser.username === username;
+    !!artist &&
+    !!loggedInUsername &&
+    loggedInUsername.toLowerCase() === artist.username.toLowerCase();
+
+  const loadLoggedInUser = async () => {
+    try {
+      setUserLoading(true);
+      await refreshUserIfNeeded();
+    } catch (error) {
+      console.error("Failed to refresh logged-in user:", error);
+    } finally {
+      setUserLoading(false);
+    }
+  };
 
   const loadArtist = async () => {
     try {
+      setLoading(true);
       const data = await fetchArtistDetails(username);
+
       setArtist(data);
+      setCoverImageUrl(data.image || "");
+
       setProfileForm({
         bio: data.bio || "",
         genres: data.genres || "",
         instagram: data.socialLinks?.instagram || "",
         portfolio: data.socialLinks?.portfolio || "",
+        youtube: data.socialLinks?.youtube || "",
       });
     } catch (error) {
       console.error("Failed to load artist details:", error);
@@ -77,6 +109,10 @@ export default function ArtistDetails() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadLoggedInUser();
+  }, []);
 
   useEffect(() => {
     if (username) {
@@ -105,12 +141,56 @@ export default function ArtistDetails() {
     setEditWorkForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCampaignChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setCampaignForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveCoverImage = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!artist || !canManageProfile) {
+      alert("You can only update your own cover picture.");
+      return;
+    }
+
+    if (!coverImageUrl.trim()) {
+      alert("Please enter a cover picture URL.");
+      return;
+    }
+
+    try {
+      setSavingCoverImage(true);
+
+      await updateArtistCoverImage({
+        username: artist.username,
+        requesting_username: loggedInUsername,
+        avatar_url: coverImageUrl,
+      });
+
+      await loadArtist();
+      alert("Cover picture updated successfully.");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update cover picture.");
+    } finally {
+      setSavingCoverImage(false);
+    }
+  };
+
   const handleSaveProfile = async (e: FormEvent) => {
     e.preventDefault();
-    if (!artist) return;
+
+    if (!artist || !canManageProfile) {
+      alert("You can only update your own artist profile.");
+      return;
+    }
 
     try {
       setSavingProfile(true);
+
       await saveArtistProfile({
         username: artist.username,
         bio: profileForm.bio,
@@ -118,8 +198,10 @@ export default function ArtistDetails() {
         social_links: {
           instagram: profileForm.instagram,
           portfolio: profileForm.portfolio,
+          youtube: profileForm.youtube,
         },
       });
+
       await loadArtist();
       alert("Profile updated successfully.");
     } catch (error) {
@@ -130,9 +212,71 @@ export default function ArtistDetails() {
     }
   };
 
+  const handleCreateCampaign = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!artist || !canManageProfile) {
+      alert("You can only create crowdfunding campaigns for your own profile.");
+      return;
+    }
+
+    if (
+      !campaignForm.title.trim() ||
+      !campaignForm.description.trim() ||
+      !campaignForm.goal_amount.trim() ||
+      !campaignForm.deadline.trim()
+    ) {
+      alert("Please fill in all crowdfunding fields.");
+      return;
+    }
+
+    const goalAmount = Number(campaignForm.goal_amount);
+
+    if (!goalAmount || goalAmount <= 0) {
+      alert("Goal amount must be greater than 0.");
+      return;
+    }
+
+    try {
+      setCreatingCampaign(true);
+
+      await createCrowdfundingCampaign({
+        username: artist.username,
+        requesting_username: loggedInUsername,
+        title: campaignForm.title,
+        description: campaignForm.description,
+        goal_amount: goalAmount,
+        deadline: campaignForm.deadline,
+      });
+
+      setCampaignForm({
+        title: "",
+        description: "",
+        goal_amount: "",
+        deadline: "",
+      });
+
+      alert(
+        "Crowdfunding campaign created successfully. It will now appear on the crowdfunding page."
+      );
+    } catch (error: any) {
+      console.error(error);
+      alert(
+        error?.response?.data?.message ||
+          "Failed to create crowdfunding campaign."
+      );
+    } finally {
+      setCreatingCampaign(false);
+    }
+  };
+
   const handleAddWork = async (e: FormEvent) => {
     e.preventDefault();
-    if (!artist) return;
+
+    if (!artist || !canManageProfile) {
+      alert("You can only add work to your own artist profile.");
+      return;
+    }
 
     if (
       !newWork.title.trim() ||
@@ -145,6 +289,7 @@ export default function ArtistDetails() {
 
     try {
       setAddingWork(true);
+
       await addArtistWork({
         username: artist.username,
         title: newWork.title,
@@ -169,6 +314,11 @@ export default function ArtistDetails() {
   };
 
   const openEditWorkModal = (work: WorkItem) => {
+    if (!canManageProfile) {
+      alert("You can only edit your own works.");
+      return;
+    }
+
     setEditingWork(work);
     setEditWorkForm({
       title: work.title,
@@ -189,7 +339,11 @@ export default function ArtistDetails() {
 
   const handleUpdateWork = async (e: FormEvent) => {
     e.preventDefault();
-    if (!artist || !editingWork) return;
+
+    if (!artist || !editingWork || !canManageProfile) {
+      alert("You can only update your own works.");
+      return;
+    }
 
     if (
       !editWorkForm.title.trim() ||
@@ -221,25 +375,7 @@ export default function ArtistDetails() {
     }
   };
 
-  const handleFollowArtist = async () => {
-    if (!loggedInUser?.username || !artist?.username) {
-      alert("Please sign in first.");
-      return;
-    }
-
-    try {
-      await followArtist({
-        follower_username: loggedInUser.username,
-        followed_username: artist.username,
-      });
-      alert("Follow request completed.");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to follow artist.");
-    }
-  };
-
-  if (loading) {
+  if (loading || userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-xl">
         Loading artist...
@@ -269,25 +405,21 @@ export default function ArtistDetails() {
             <Link to="/artists" className="text-blue-600 underline">
               ← Back to Artists
             </Link>
+
             <Link to="/showcase" className="text-blue-600 underline">
               View Digital Art Showcase
             </Link>
-            {!canManageProfile && (
-              <button
-                onClick={handleFollowArtist}
-                className="bg-black text-white px-4 py-2 rounded-lg"
-              >
-                Follow Artist
-              </button>
-            )}
           </div>
 
           <h1 className="text-4xl font-bold mt-4">{artist.name}</h1>
+
           <p className="text-lg text-gray-600 mt-2">
             {artist.category} • {artist.city}
           </p>
 
-          <p className="mt-6 text-gray-700 leading-8">{artist.bio}</p>
+          <p className="mt-6 text-gray-700 leading-8">
+            {artist.bio || "No bio added yet."}
+          </p>
 
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-2">
@@ -300,6 +432,7 @@ export default function ArtistDetails() {
 
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-2">Profile Links</h2>
+
             <div className="flex flex-wrap gap-4">
               {artist.socialLinks?.instagram && (
                 <a
@@ -311,6 +444,7 @@ export default function ArtistDetails() {
                   Instagram
                 </a>
               )}
+
               {artist.socialLinks?.portfolio && (
                 <a
                   href={artist.socialLinks.portfolio}
@@ -321,6 +455,7 @@ export default function ArtistDetails() {
                   Portfolio
                 </a>
               )}
+
               {artist.socialLinks?.youtube && (
                 <a
                   href={artist.socialLinks.youtube}
@@ -331,13 +466,55 @@ export default function ArtistDetails() {
                   YouTube
                 </a>
               )}
+
+              {!artist.socialLinks?.instagram &&
+                !artist.socialLinks?.portfolio &&
+                !artist.socialLinks?.youtube && (
+                  <p className="text-gray-600">No profile links added yet.</p>
+                )}
             </div>
           </div>
 
           {canManageProfile && (
             <>
               <div className="mt-10">
+                <h2 className="text-2xl font-semibold mb-4">
+                  Update Cover Picture
+                </h2>
+
+                <form
+                  onSubmit={handleSaveCoverImage}
+                  className="grid grid-cols-1 gap-4 bg-gray-50 p-6 rounded-xl border"
+                >
+                  <input
+                    type="text"
+                    value={coverImageUrl}
+                    onChange={(e) => setCoverImageUrl(e.target.value)}
+                    placeholder="Cover picture URL"
+                    className="border rounded-lg px-4 py-2"
+                  />
+
+                  {coverImageUrl && (
+                    <img
+                      src={coverImageUrl}
+                      alt="Cover preview"
+                      className="w-full h-48 object-cover rounded-lg border"
+                    />
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={savingCoverImage}
+                    className="bg-black text-white px-5 py-2 rounded-lg hover:opacity-90 w-fit"
+                  >
+                    {savingCoverImage ? "Saving..." : "Save Cover Picture"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-10">
                 <h2 className="text-2xl font-semibold mb-4">Update Profile</h2>
+
                 <form
                   onSubmit={handleSaveProfile}
                   className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-6 rounded-xl border"
@@ -356,7 +533,7 @@ export default function ArtistDetails() {
                     name="genres"
                     value={profileForm.genres}
                     onChange={handleProfileChange}
-                    placeholder="Genres (comma separated)"
+                    placeholder="Genres / specialization"
                     className="border rounded-lg px-4 py-2 md:col-span-2"
                   />
 
@@ -378,6 +555,15 @@ export default function ArtistDetails() {
                     className="border rounded-lg px-4 py-2"
                   />
 
+                  <input
+                    type="text"
+                    name="youtube"
+                    value={profileForm.youtube}
+                    onChange={handleProfileChange}
+                    placeholder="YouTube link"
+                    className="border rounded-lg px-4 py-2 md:col-span-2"
+                  />
+
                   <button
                     type="submit"
                     disabled={savingProfile}
@@ -389,7 +575,67 @@ export default function ArtistDetails() {
               </div>
 
               <div className="mt-10">
+                <h2 className="text-2xl font-semibold mb-2">
+                  Create Crowdfunding Campaign
+                </h2>
+
+                <p className="text-sm text-gray-600 mb-4">
+                  Create a fundraising campaign for your own art project. Once
+                  submitted, it will appear on the crowdfunding page.
+                </p>
+
+                <form
+                  onSubmit={handleCreateCampaign}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-6 rounded-xl border"
+                >
+                  <input
+                    type="text"
+                    name="title"
+                    value={campaignForm.title}
+                    onChange={handleCampaignChange}
+                    placeholder="Project Title"
+                    className="border rounded-lg px-4 py-2 md:col-span-2"
+                  />
+
+                  <textarea
+                    name="description"
+                    value={campaignForm.description}
+                    onChange={handleCampaignChange}
+                    placeholder="Project Description"
+                    rows={4}
+                    className="border rounded-lg px-4 py-2 md:col-span-2"
+                  />
+
+                  <input
+                    type="number"
+                    name="goal_amount"
+                    value={campaignForm.goal_amount}
+                    onChange={handleCampaignChange}
+                    placeholder="Goal Amount"
+                    className="border rounded-lg px-4 py-2"
+                  />
+
+                  <input
+                    type="date"
+                    name="deadline"
+                    value={campaignForm.deadline}
+                    onChange={handleCampaignChange}
+                    className="border rounded-lg px-4 py-2"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={creatingCampaign}
+                    className="bg-black text-white px-5 py-2 rounded-lg hover:opacity-90 md:w-fit"
+                  >
+                    {creatingCampaign ? "Creating..." : "Create Campaign"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-10">
                 <h2 className="text-2xl font-semibold mb-2">Add New Work</h2>
+
                 <p className="text-sm text-gray-600 mb-4">
                   Works added in supported categories will also appear in the
                   Digital Art Showcase.
@@ -429,7 +675,7 @@ export default function ArtistDetails() {
                     name="media_url"
                     value={newWork.media_url}
                     onChange={handleWorkChange}
-                    placeholder="Media URL (YouTube or image URL)"
+                    placeholder="Media URL, YouTube URL, or image URL"
                     className="border rounded-lg px-4 py-2 md:col-span-2"
                   />
 
@@ -448,64 +694,71 @@ export default function ArtistDetails() {
           <div className="mt-8">
             <h2 className="text-2xl font-semibold mb-4">Featured Works</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {artist.works.map((work) => (
-                <div
-                  key={work.id}
-                  className="border rounded-xl p-5 shadow-sm hover:shadow-md transition bg-white"
-                >
-                  <img
-                    src={work.image}
-                    alt={work.title}
-                    className="w-full h-48 object-cover rounded-lg mb-4"
-                  />
+            {artist.works.length === 0 ? (
+              <p className="text-gray-600">No featured works added yet.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {artist.works.map((work) => (
+                  <div
+                    key={work.id}
+                    className="border rounded-xl p-5 shadow-sm hover:shadow-md transition bg-white"
+                  >
+                    <img
+                      src={work.image}
+                      alt={work.title}
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
 
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="inline-block text-xs bg-gray-100 px-3 py-1 rounded-full">
-                      {work.type}
-                    </span>
-                    <span className="inline-block text-xs bg-gray-100 px-3 py-1 rounded-full">
-                      {work.category}
-                    </span>
-                  </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <span className="inline-block text-xs bg-gray-100 px-3 py-1 rounded-full">
+                        {work.type}
+                      </span>
 
-                  <h3 className="text-lg font-semibold">{work.title}</h3>
-                  <p className="text-gray-600 mt-2 text-sm leading-6">
-                    {work.description}
-                  </p>
+                      <span className="inline-block text-xs bg-gray-100 px-3 py-1 rounded-full">
+                        {work.category}
+                      </span>
+                    </div>
 
-                  <div className="mt-4 flex flex-wrap gap-4 items-center">
-                    <a
-                      href={work.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      Open Work
-                    </a>
+                    <h3 className="text-lg font-semibold">{work.title}</h3>
 
-                    {canManageProfile && (
-                      <button
-                        onClick={() => openEditWorkModal(work)}
-                        className="text-sm bg-black text-white px-3 py-1 rounded-lg"
+                    <p className="text-gray-600 mt-2 text-sm leading-6">
+                      {work.description}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-4 items-center">
+                      <a
+                        href={work.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
                       >
-                        Edit Work
-                      </button>
-                    )}
+                        Open Work
+                      </a>
+
+                      {canManageProfile && (
+                        <button
+                          onClick={() => openEditWorkModal(work)}
+                          className="text-sm bg-black text-white px-3 py-1 rounded-lg"
+                        >
+                          Edit Work
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {editingWork && (
+      {editingWork && canManageProfile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg">
             <h2 className="mb-2 text-2xl font-bold text-gray-900">
               Edit Work
             </h2>
+
             <p className="mb-6 text-sm text-gray-600">
               Update your portfolio work details.
             </p>
@@ -515,6 +768,7 @@ export default function ArtistDetails() {
                 <label className="mb-1 block text-sm font-medium text-gray-800">
                   Work Title
                 </label>
+
                 <input
                   type="text"
                   name="title"
@@ -529,6 +783,7 @@ export default function ArtistDetails() {
                 <label className="mb-1 block text-sm font-medium text-gray-800">
                   Category
                 </label>
+
                 <select
                   name="category"
                   value={editWorkForm.category}
@@ -550,6 +805,7 @@ export default function ArtistDetails() {
                 <label className="mb-1 block text-sm font-medium text-gray-800">
                   Media URL
                 </label>
+
                 <input
                   type="text"
                   name="media_url"
@@ -569,6 +825,7 @@ export default function ArtistDetails() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60"

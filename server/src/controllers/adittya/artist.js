@@ -201,6 +201,63 @@ export const upsertArtistProfile = async ({ username, bio, genres, social_links 
   return data;
 };
 
+export const updateArtistCoverImage = async (req, res) => {
+  try {
+    const { username, requesting_username, avatar_url } = req.body;
+
+    if (!username || !requesting_username || !avatar_url) {
+      return res.status(400).json({
+        success: false,
+        message: "username, requesting_username, and avatar_url are required.",
+      });
+    }
+
+    if (username.toLowerCase() !== requesting_username.toLowerCase()) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only update your own cover picture.",
+      });
+    }
+
+    const { data: user, error: userError } = await supabase
+      .from("user")
+      .select("id, username")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (userError) throw userError;
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("user")
+      .update({ avatar_url })
+      .eq("username", username)
+      .select("id, username, avatar_url")
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: "Cover picture updated successfully.",
+      data,
+    });
+  } catch (error) {
+    console.error("updateArtistCoverImage error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update cover picture.",
+      error: error.message,
+    });
+  }
+};
+
 export const addArtistMedia = async ({ username, title, category, media_url }) => {
   const { data, error } = await supabase
     .from("artist_media")
@@ -225,6 +282,151 @@ export const updateArtistMedia = async ({ media_id, username, title, category, m
   return data;
 };
 
+export const checkUserArtistRoleAndProfile = async (username) => {
+  const { data: user, error: userError } = await supabase
+    .from("user")
+    .select("id, username, firstname, lastname, city, bio, avatar_url")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (userError) throw userError;
+
+  if (!user) {
+    return {
+      user: null,
+      isArtist: false,
+      hasArtistProfile: false,
+      artistProfile: null,
+    };
+  }
+
+  const { data: roleRows, error: roleError } = await supabase
+    .from("user_role")
+    .select("role")
+    .eq("user_id", user.id);
+
+  if (roleError) throw roleError;
+
+  const isArtist = (roleRows || []).some(
+    (row) => String(row.role).toLowerCase() === "artist"
+  );
+
+  const { data: artistProfile, error: profileError } = await supabase
+    .from("artist_profiles")
+    .select("profile_id, username, bio, genres, social_links, created_at")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (profileError) throw profileError;
+
+  return {
+    user,
+    isArtist,
+    hasArtistProfile: !!artistProfile,
+    artistProfile: artistProfile || null,
+  };
+};
+
+export const getArtistProfileStatus = async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: "username is required.",
+      });
+    }
+
+    const data = await checkUserArtistRoleAndProfile(username);
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("getArtistProfileStatus error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to check artist profile status.",
+      error: error.message,
+    });
+  }
+};
+
+export const createArtistProfile = async (req, res) => {
+  try {
+    const { username, bio, genres, social_links } = req.body;
+
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: "username is required.",
+      });
+    }
+
+    const status = await checkUserArtistRoleAndProfile(username);
+
+    if (!status.user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    if (!status.isArtist) {
+      return res.status(403).json({
+        success: false,
+        message: "Only users with artist role can create an artist portfolio.",
+      });
+    }
+
+    if (status.hasArtistProfile) {
+      return res.status(409).json({
+        success: false,
+        message: "Artist portfolio already exists for this user.",
+      });
+    }
+
+    const fullName = [status.user.firstname, status.user.lastname]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    const { data, error } = await supabase
+      .from("artist_profiles")
+      .insert([
+        {
+          username,
+          bio:
+            bio ||
+            status.user.bio ||
+            `${fullName || username} is an artist on StageBD.`,
+          genres: genres || "",
+          social_links: social_links || {},
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json({
+      success: true,
+      message: "Artist portfolio created successfully.",
+      data,
+    });
+  } catch (error) {
+    console.error("createArtistProfile error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create artist portfolio.",
+      error: error.message,
+    });
+  }
+};
+
+
 export const followArtist = async ({ follower_username, followed_username }) => {
   const { data: existing, error: existingError } = await supabase
     .from("followers")
@@ -248,49 +450,105 @@ export const followArtist = async ({ follower_username, followed_username }) => 
 
 export const createSponsorshipRequest = async (req, res) => {
   try {
-    const { artist_username, sponsor_name, message } = req.body;
+    const {
+      artist_username,
+      requesting_username,
+      sponsor_name,
+      message,
+      requested_amount,
+    } = req.body;
 
-    if (!artist_username || !sponsor_name || !message) {
+    if (!artist_username || !requesting_username || !sponsor_name || !message) {
       return res.status(400).json({
         success: false,
-        message: "artist_username, sponsor_name, and message are required.",
+        message:
+          "artist_username, requesting_username, sponsor_name, and message are required.",
       });
     }
 
-    const { data: artistUser, error: artistError } = await supabase
-      .from("user")
-      .select("id, username")
-      .eq("username", artist_username)
-      .maybeSingle();
-
-    if (artistError) throw artistError;
-
-    if (!artistUser) {
-      return res.status(404).json({
+    if (
+      artist_username.toLowerCase() !== requesting_username.toLowerCase()
+    ) {
+      return res.status(403).json({
         success: false,
-        message: "Artist user not found.",
+        message: "You can only request sponsorship for your own artist account.",
       });
     }
 
-    const sponsorMap = {
-      "Bangla Culture Foundation": "bangla_culture_foundation",
-      "Creative Youth Media": "creative_youth_media",
-      "Rupali Events & Patron Circle": "rupali_events_patron_circle",
+    const numericRequestedAmount = Number(requested_amount);
+
+    if (!numericRequestedAmount || numericRequestedAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Requested amount must be greater than 0.",
+      });
+    }
+
+    const sponsorBudgetMap = {
+      "Bangla Culture Foundation": {
+        username: "bangla_culture_foundation",
+        min: 50000,
+        max: 200000,
+      },
+      "Creative Youth Media": {
+        username: "creative_youth_media",
+        min: 30000,
+        max: 150000,
+      },
+      "Rupali Events & Patron Circle": {
+        username: "rupali_events_patron_circle",
+        min: 40000,
+        max: 180000,
+      },
     };
 
-    const sponsorUsername = sponsorMap[sponsor_name];
+    const sponsorInfo = sponsorBudgetMap[sponsor_name];
 
-    if (!sponsorUsername) {
+    if (!sponsorInfo) {
       return res.status(400).json({
         success: false,
         message: "Selected sponsor is not recognized.",
       });
     }
 
+    if (
+      numericRequestedAmount < sponsorInfo.min ||
+      numericRequestedAmount > sponsorInfo.max
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `Requested amount must be between ${sponsorInfo.min} and ${sponsorInfo.max}.`,
+      });
+    }
+
+    const artistStatus = await checkUserArtistRoleAndProfile(artist_username);
+
+    if (!artistStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Artist user not found.",
+      });
+    }
+
+    if (!artistStatus.isArtist) {
+      return res.status(403).json({
+        success: false,
+        message: "Only users with artist role can request sponsorship.",
+      });
+    }
+
+    if (!artistStatus.hasArtistProfile) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You must create your artist portfolio before requesting sponsorship.",
+      });
+    }
+
     const { data: sponsorUser, error: sponsorError } = await supabase
       .from("user")
       .select("id, username")
-      .eq("username", sponsorUsername)
+      .eq("username", sponsorInfo.username)
       .maybeSingle();
 
     if (sponsorError) throw sponsorError;
@@ -306,9 +564,10 @@ export const createSponsorshipRequest = async (req, res) => {
       .from("sponsorship_request")
       .insert([
         {
-          artist_id: artistUser.id,
+          artist_id: artistStatus.user.id,
           sponsor_id: sponsorUser.id,
           message,
+          requested_amount: numericRequestedAmount,
         },
       ])
       .select()
@@ -335,25 +594,28 @@ export const getSponsorshipRequestsByArtist = async (req, res) => {
   try {
     const { username } = req.params;
 
-    const { data: artistUser, error: artistError } = await supabase
-      .from("user")
-      .select("id, username")
-      .eq("username", username)
-      .maybeSingle();
+    const artistStatus = await checkUserArtistRoleAndProfile(username);
 
-    if (artistError) throw artistError;
-
-    if (!artistUser) {
+    if (!artistStatus.user) {
       return res.status(404).json({
         success: false,
         message: "Artist user not found.",
       });
     }
 
+    if (!artistStatus.isArtist) {
+      return res.status(403).json({
+        success: false,
+        message: "Only artist users can view sponsorship requests.",
+      });
+    }
+
     const { data, error } = await supabase
       .from("sponsorship_request")
-      .select("id, artist_id, sponsor_id, message, status, created_at")
-      .eq("artist_id", artistUser.id)
+      .select(
+        "id, artist_id, sponsor_id, message, status, requested_amount, created_at"
+      )
+      .eq("artist_id", artistStatus.user.id)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -434,16 +696,45 @@ export const saveArtistProfile = async (req, res) => {
       });
     }
 
-    const data = await upsertArtistProfile({
-      username,
-      bio,
-      genres,
-      social_links,
-    });
+    const status = await checkUserArtistRoleAndProfile(username);
+
+    if (!status.user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    if (!status.isArtist) {
+      return res.status(403).json({
+        success: false,
+        message: "Only artist users can update artist portfolios.",
+      });
+    }
+
+    if (!status.hasArtistProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Artist portfolio does not exist yet. Create it first.",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("artist_profiles")
+      .update({
+        bio,
+        genres,
+        social_links,
+      })
+      .eq("username", username)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return res.status(200).json({
       success: true,
-      message: "Artist profile saved successfully.",
+      message: "Artist profile updated successfully.",
       data,
     });
   } catch (error) {
@@ -600,6 +891,104 @@ export const listCampaigns = async () => {
   });
 };
 
+export const createCampaignForArtist = async (req, res) => {
+  try {
+    const {
+      username,
+      requesting_username,
+      title,
+      description,
+      goal_amount,
+      deadline,
+    } = req.body;
+
+    if (
+      !username ||
+      !requesting_username ||
+      !title ||
+      !description ||
+      !goal_amount ||
+      !deadline
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "username, requesting_username, title, description, goal_amount, and deadline are required.",
+      });
+    }
+
+    if (username.toLowerCase() !== requesting_username.toLowerCase()) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only create crowdfunding campaigns for yourself.",
+      });
+    }
+
+    const status = await checkUserArtistRoleAndProfile(username);
+
+    if (!status.user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    if (!status.isArtist) {
+      return res.status(403).json({
+        success: false,
+        message: "Only artist users can create crowdfunding campaigns.",
+      });
+    }
+
+    if (!status.hasArtistProfile) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You must create your artist portfolio before creating a crowdfunding campaign.",
+      });
+    }
+
+    const numericGoalAmount = Number(goal_amount);
+
+    if (!numericGoalAmount || numericGoalAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Goal amount must be greater than 0.",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("campaign")
+      .insert([
+        {
+          artist_id: status.user.id,
+          title,
+          description,
+          goal_amount: numericGoalAmount,
+          raised_amount: 0,
+          deadline,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json({
+      success: true,
+      message: "Crowdfunding campaign created successfully.",
+      data,
+    });
+  } catch (error) {
+    console.error("createCampaignForArtist error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create crowdfunding campaign.",
+      error: error.message,
+    });
+  }
+};
+
 export const getCampaigns = async (req, res) => {
   try {
     const data = await listCampaigns();
@@ -694,45 +1083,126 @@ export const saveContribution = async (req, res) => {
     });
   }
 };
-export const listEventAnalytics = async () => {
-  const { data: analyticsRows, error: analyticsError } = await supabase
-    .from("event_analytics")
-    .select("event_id, views, reservations, attendance, promo_uses");
 
-  if (analyticsError) throw analyticsError;
-
-  const eventIds = [...new Set((analyticsRows || []).map((row) => row.event_id).filter(Boolean))];
-
-  let eventMap = new Map();
-
-  if (eventIds.length > 0) {
-    const { data: events, error: eventsError } = await supabase
-      .from("event")
-      .select("id, title")
-      .in("id", eventIds);
-
-    if (eventsError) throw eventsError;
-
-    eventMap = new Map((events || []).map((event) => [event.id, event]));
+export const listEventAnalytics = async (organizerUsername) => {
+  if (!organizerUsername) {
+    const error = new Error("Organizer username is required.");
+    error.statusCode = 400;
+    throw error;
   }
 
-  return (analyticsRows || []).map((row) => {
-    const event = eventMap.get(row.event_id);
+  const { data: organizerUser, error: userError } = await supabase
+    .from("user")
+    .select("id, username")
+    .eq("username", organizerUsername)
+    .maybeSingle();
 
-    return {
-      eventId: row.event_id,
-      eventTitle: event?.title || "Untitled Event",
-      views: Number(row.views || 0),
-      reservations: Number(row.reservations || 0),
-      attendance: Number(row.attendance || 0),
-      promoUses: Number(row.promo_uses || 0),
-    };
+  if (userError) throw userError;
+
+  if (!organizerUser) {
+    const error = new Error("Organizer user not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const { data: roleRows, error: roleError } = await supabase
+    .from("user_role")
+    .select("role")
+    .eq("user_id", organizerUser.id);
+
+  if (roleError) throw roleError;
+
+  const isOrganizer = (roleRows || []).some(
+    (row) => String(row.role).toLowerCase() === "organizer"
+  );
+
+  if (!isOrganizer) {
+    const error = new Error("Only organizer users can view analytics.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const { data: events, error: eventsError } = await supabase
+    .from("event")
+    .select("id, title, organizer_id")
+    .eq("organizer_id", organizerUser.id)
+    .order("title", { ascending: true });
+
+  if (eventsError) throw eventsError;
+
+  const organizerEventIds = (events || []).map((event) => event.id);
+
+  const eventMap = new Map();
+  const analyticsMap = new Map();
+
+  (events || []).forEach((event) => {
+    eventMap.set(event.id, event);
+
+    analyticsMap.set(event.id, {
+      eventId: event.id,
+      eventTitle: event.title || "Untitled Event",
+      reservations: 0,
+      promoUses: 0,
+      uniqueUserSet: new Set(),
+      promoCodeIdSet: new Set(),
+      reservationCodeSet: new Set(),
+    });
   });
+
+  if (organizerEventIds.length === 0) {
+    return [];
+  }
+
+  const { data: reservations, error: reservationError } = await supabase
+    .from("reservation")
+    .select(
+      "id, user_id, event_id, promo_code_id, ticket_slot_id, reservation_code"
+    )
+    .in("event_id", organizerEventIds);
+
+  if (reservationError) throw reservationError;
+
+  (reservations || []).forEach((reservation) => {
+    const eventId = reservation.event_id;
+
+    if (!analyticsMap.has(eventId)) {
+      return;
+    }
+
+    const item = analyticsMap.get(eventId);
+
+    item.reservations += 1;
+
+    if (reservation.user_id) {
+      item.uniqueUserSet.add(String(reservation.user_id));
+    }
+
+    if (reservation.promo_code_id) {
+      item.promoUses += 1;
+      item.promoCodeIdSet.add(String(reservation.promo_code_id));
+    }
+
+    if (reservation.reservation_code) {
+      item.reservationCodeSet.add(String(reservation.reservation_code));
+    }
+  });
+
+  return Array.from(analyticsMap.values()).map((item) => ({
+    eventId: item.eventId,
+    eventTitle: item.eventTitle,
+    reservations: item.reservations,
+    promoUses: item.promoUses,
+    uniqueUsers: item.uniqueUserSet.size,
+    promoCodeIds: Array.from(item.promoCodeIdSet),
+    reservationCodes: Array.from(item.reservationCodeSet),
+  }));
 };
 
 export const getEventAnalytics = async (req, res) => {
   try {
-    const data = await listEventAnalytics();
+    const { username } = req.query;
+
+    const data = await listEventAnalytics(username);
 
     return res.status(200).json({
       success: true,
@@ -740,10 +1210,10 @@ export const getEventAnalytics = async (req, res) => {
     });
   } catch (error) {
     console.error("getEventAnalytics error:", error);
-    return res.status(500).json({
+
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: "Failed to load event analytics.",
-      error: error.message,
+      message: error.message || "Failed to load event analytics.",
     });
   }
 };

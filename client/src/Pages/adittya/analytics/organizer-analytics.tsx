@@ -1,29 +1,77 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { refreshUserIfNeeded, useUserStore } from "@/store/User/user";
 
 type AnalyticsItem = {
   eventId: string;
   eventTitle: string;
-  views: number;
   reservations: number;
-  attendance: number;
   promoUses: number;
+  uniqueUsers: number;
+  promoCodeIds: string[];
+  reservationCodes: string[];
 };
 
 export default function OrganizerAnalytics() {
+  const user = useUserStore((state) => state.user);
+  const userRoles = useUserStore((state) => state.userRoles);
+
   const [analytics, setAnalytics] = useState<AnalyticsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  const username = user?.username || "";
+
+  const isOrganizer = useMemo(() => {
+    return (
+      Array.isArray(userRoles) &&
+      userRoles.some((role) => String(role).toLowerCase() === "organizer")
+    );
+  }, [userRoles]);
+
   useEffect(() => {
-    fetchAnalytics();
+    loadLoggedInUser();
   }, []);
 
+  useEffect(() => {
+    if (!userLoading) {
+      fetchAnalytics();
+    }
+  }, [userLoading, username, isOrganizer]);
+
+  async function loadLoggedInUser() {
+    try {
+      setUserLoading(true);
+      await refreshUserIfNeeded();
+    } catch (error) {
+      console.error("Failed to refresh logged-in user:", error);
+    } finally {
+      setUserLoading(false);
+    }
+  }
+
   async function fetchAnalytics() {
+    if (!username) {
+      setAnalytics([]);
+      setIsLoading(false);
+      setLoadError("");
+      return;
+    }
+
+    if (!isOrganizer) {
+      setAnalytics([]);
+      setIsLoading(false);
+      setLoadError("");
+      return;
+    }
+
     try {
       setIsLoading(true);
       setLoadError("");
 
-      const response = await fetch("/api/adittya/analytics");
+      const response = await fetch(
+        `/api/adittya/analytics?username=${encodeURIComponent(username)}`
+      );
       const result = await response.json();
 
       if (!response.ok) {
@@ -42,19 +90,75 @@ export default function OrganizerAnalytics() {
   }
 
   const totalEvents = analytics.length;
-  const totalViews = analytics.reduce((sum, item) => sum + item.views, 0);
+
   const totalReservations = analytics.reduce(
     (sum, item) => sum + item.reservations,
     0
   );
-  const totalAttendance = analytics.reduce(
-    (sum, item) => sum + item.attendance,
-    0
-  );
+
   const totalPromoUses = analytics.reduce(
     (sum, item) => sum + item.promoUses,
     0
   );
+
+  const eventsWithReservations = analytics.filter(
+    (item) => item.reservations > 0
+  ).length;
+
+  const totalUniqueUsers = analytics.reduce(
+    (sum, item) => sum + item.uniqueUsers,
+    0
+  );
+
+  function renderList(values: string[]) {
+    if (!values || values.length === 0) return "None";
+
+    return values.slice(0, 5).join(", ") + (values.length > 5 ? " ..." : "");
+  }
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 px-6 py-8">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-sm text-gray-600">Checking signed-in user...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!username) {
+    return (
+      <div className="min-h-screen bg-gray-50 px-6 py-8">
+        <div className="mx-auto max-w-6xl rounded-2xl border bg-white p-6 shadow-sm">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
+            Organizer Analytics Dashboard
+          </h1>
+          <p className="text-sm text-gray-600">
+            Please sign in as an organizer to view organizer analytics.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOrganizer) {
+    return (
+      <div className="min-h-screen bg-gray-50 px-6 py-8">
+        <div className="mx-auto max-w-6xl rounded-2xl border bg-white p-6 shadow-sm">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
+            Organizer Analytics Dashboard
+          </h1>
+          <p className="text-sm text-red-600">
+            Access denied. Only users with organizer role can view this
+            dashboard.
+          </p>
+          <p className="mt-2 text-sm text-gray-600">
+            Signed in as: <span className="font-semibold">{username}</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8">
@@ -62,9 +166,15 @@ export default function OrganizerAnalytics() {
         <h1 className="mb-2 text-3xl font-bold text-gray-900">
           Organizer Analytics Dashboard
         </h1>
-        <p className="mb-8 text-sm text-gray-600">
-          Overview of event performance, reservations, attendance, and promo
-          code usage.
+
+        <p className="mb-2 text-sm text-gray-600">
+          Overview of your own events, reservations, reserving users, and promo
+          code usage based on existing database records.
+        </p>
+
+        <p className="mb-8 text-sm text-gray-500">
+          Signed in as organizer:{" "}
+          <span className="font-semibold">{username}</span>
         </p>
 
         {isLoading ? (
@@ -75,18 +185,11 @@ export default function OrganizerAnalytics() {
           </div>
         ) : (
           <>
-            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border bg-white p-5 shadow-sm">
-                <p className="text-sm text-gray-500">Total Events</p>
+                <p className="text-sm text-gray-500">My Total Events</p>
                 <h2 className="mt-2 text-2xl font-semibold text-gray-900">
                   {totalEvents}
-                </h2>
-              </div>
-
-              <div className="rounded-2xl border bg-white p-5 shadow-sm">
-                <p className="text-sm text-gray-500">Total Views</p>
-                <h2 className="mt-2 text-2xl font-semibold text-gray-900">
-                  {totalViews}
                 </h2>
               </div>
 
@@ -98,28 +201,41 @@ export default function OrganizerAnalytics() {
               </div>
 
               <div className="rounded-2xl border bg-white p-5 shadow-sm">
-                <p className="text-sm text-gray-500">Attendance</p>
-                <h2 className="mt-2 text-2xl font-semibold text-gray-900">
-                  {totalAttendance}
-                </h2>
-              </div>
-
-              <div className="rounded-2xl border bg-white p-5 shadow-sm">
-                <p className="text-sm text-gray-500">Promo Uses</p>
+                <p className="text-sm text-gray-500">Promo Code Uses</p>
                 <h2 className="mt-2 text-2xl font-semibold text-gray-900">
                   {totalPromoUses}
                 </h2>
               </div>
+
+              <div className="rounded-2xl border bg-white p-5 shadow-sm">
+                <p className="text-sm text-gray-500">
+                  My Events With Reservations
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold text-gray-900">
+                  {eventsWithReservations}
+                </h2>
+              </div>
+            </div>
+
+            <div className="mb-8 rounded-2xl border bg-white p-5 shadow-sm">
+              <p className="text-sm text-gray-500">Unique Reserving Users</p>
+              <h2 className="mt-2 text-2xl font-semibold text-gray-900">
+                {totalUniqueUsers}
+              </h2>
+              <p className="mt-2 text-xs text-gray-500">
+                This is calculated only from reservations made for your own
+                events.
+              </p>
             </div>
 
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
               <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                Event-wise Breakdown
+                My Event-wise Breakdown
               </h2>
 
               {analytics.length === 0 ? (
                 <p className="text-sm text-gray-600">
-                  No analytics data found.
+                  No event or reservation data found for your organizer account.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
@@ -130,36 +246,51 @@ export default function OrganizerAnalytics() {
                           Event
                         </th>
                         <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                          Views
-                        </th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">
                           Reservations
-                        </th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                          Attendance
                         </th>
                         <th className="px-4 py-3 text-sm font-semibold text-gray-700">
                           Promo Uses
                         </th>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">
+                          Unique Users
+                        </th>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">
+                          Promo Code IDs Used
+                        </th>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">
+                          Reservation Codes
+                        </th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {analytics.map((item) => (
-                        <tr key={item.eventId} className="border-b last:border-b-0">
+                        <tr
+                          key={item.eventId}
+                          className="border-b last:border-b-0"
+                        >
                           <td className="px-4 py-3 text-sm text-gray-800">
                             {item.eventTitle}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">
-                            {item.views}
-                          </td>
+
                           <td className="px-4 py-3 text-sm text-gray-700">
                             {item.reservations}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">
-                            {item.attendance}
-                          </td>
+
                           <td className="px-4 py-3 text-sm text-gray-700">
                             {item.promoUses}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm text-gray-700">
+                            {item.uniqueUsers}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm text-gray-700">
+                            {renderList(item.promoCodeIds)}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm text-gray-700">
+                            {renderList(item.reservationCodes)}
                           </td>
                         </tr>
                       ))}
