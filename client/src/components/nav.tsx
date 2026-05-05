@@ -17,7 +17,9 @@ interface Pages {
 }
 
 const defaultPages: Pages[] = [
-    { name: "Feed", href: "/feed" }
+    { name: "Feed", href: "/feed" },
+    { name: "Art Showcase", href: "/showcase" },
+    { name: "Crowdfunding", href: "/crowdfunding" },
 ]
 
 export default function Nav({ pages }: { pages?: Pages[] }) {
