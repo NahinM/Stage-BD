@@ -15,3 +15,22 @@ app.get("/api/adittya/analytics", controller.adittyaArtistController.getEventAna
 /* Adittya sponsor request routes */
 app.post("/api/adittya/sponsorship-request", controller.adittyaArtistController.createSponsorshipRequest);
 app.get("/api/adittya/sponsorship-request/:username", controller.adittyaArtistController.getSponsorshipRequestsByArtist);
+app.get(
+  "/api/adittya/artist-profile-status/:username",
+  controller.adittyaArtistController.getArtistProfileStatus
+);
+
+app.post(
+  "/api/adittya/artist-profile",
+  controller.adittyaArtistController.createArtistProfile
+);
+
+app.put(
+  "/api/adittya/artist-cover",
+  controller.adittyaArtistController.updateArtistCoverImage
+);
+
+app.post(
+  "/api/adittya/campaigns",
+  controller.adittyaArtistController.createCampaignForArtist
+);

@@ -1,6 +1,8 @@
 import axios from "axios";
 import { staticArtists, staticShowcaseArtworks, type Artist } from "./artists-data";
 
+const API_BASE_URL = "http://localhost:3000";
+
 export type ArtistCardItem = {
   id: string;
   username: string;
@@ -42,6 +44,28 @@ export type ShowcaseItem = {
   artistCity: string;
 };
 
+export type ArtistProfileStatus = {
+  user: {
+    id: string;
+    username: string;
+    firstname?: string;
+    lastname?: string;
+    city?: string;
+    bio?: string;
+    avatar_url?: string;
+  } | null;
+  isArtist: boolean;
+  hasArtistProfile: boolean;
+  artistProfile: {
+    profile_id: number;
+    username: string;
+    bio?: string;
+    genres?: string;
+    social_links?: Record<string, string>;
+    created_at?: string;
+  } | null;
+};
+
 const normalizeStaticArtist = (artist: Artist): ArtistDetail => ({
   id: artist.id,
   username: artist.username,
@@ -71,7 +95,7 @@ const dedupeWorks = (works: WorkItem[]): WorkItem[] => {
 
 export const fetchArtists = async (): Promise<ArtistCardItem[]> => {
   try {
-    const { data } = await axios.get("http://localhost:3000/api/adittya/artists");
+    const { data } = await axios.get(`${API_BASE_URL}/api/adittya/artists`);
     const dbArtists = data.data || [];
 
     const merged = [...staticArtists.map(normalizeStaticArtist), ...dbArtists];
@@ -91,13 +115,17 @@ export const fetchArtists = async (): Promise<ArtistCardItem[]> => {
   }
 };
 
-export const fetchArtistDetails = async (username: string): Promise<ArtistDetail> => {
+export const fetchArtistDetails = async (
+  username: string
+): Promise<ArtistDetail> => {
   const staticArtist = staticArtists.find(
     (artist) => artist.id === username || artist.username === username
   );
 
   try {
-    const { data } = await axios.get(`http://localhost:3000/api/adittya/artists/${username}`);
+    const { data } = await axios.get(
+      `${API_BASE_URL}/api/adittya/artists/${username}`
+    );
     const dbArtist = data.data;
 
     if (!dbArtist && staticArtist) {
@@ -138,7 +166,7 @@ export const fetchArtistDetails = async (username: string): Promise<ArtistDetail
 
 export const fetchShowcaseItems = async (): Promise<ShowcaseItem[]> => {
   try {
-    const { data } = await axios.get("http://localhost:3000/api/adittya/showcase");
+    const { data } = await axios.get(`${API_BASE_URL}/api/adittya/showcase`);
     const dbItems = data.data || [];
 
     const merged = [...staticShowcaseArtworks, ...dbItems];
@@ -158,13 +186,70 @@ export const fetchShowcaseItems = async (): Promise<ShowcaseItem[]> => {
   }
 };
 
+export const fetchArtistProfileStatus = async (
+  username: string
+): Promise<ArtistProfileStatus> => {
+  const { data } = await axios.get(
+    `${API_BASE_URL}/api/adittya/artist-profile-status/${username}`
+  );
+
+  return data.data;
+};
+
+export const createMyArtistPortfolio = async (payload: {
+  username: string;
+  bio?: string;
+  genres?: string;
+  social_links?: Record<string, string>;
+}) => {
+  const { data } = await axios.post(
+    `${API_BASE_URL}/api/adittya/artist-profile`,
+    payload
+  );
+
+  return data;
+};
+
+export const updateArtistCoverImage = async (payload: {
+  username: string;
+  requesting_username: string;
+  avatar_url: string;
+}) => {
+  const { data } = await axios.put(
+    `${API_BASE_URL}/api/adittya/artist-cover`,
+    payload
+  );
+
+  return data;
+};
+
+export const createCrowdfundingCampaign = async (payload: {
+  username: string;
+  requesting_username: string;
+  title: string;
+  description: string;
+  goal_amount: number;
+  deadline: string;
+}) => {
+  const { data } = await axios.post(
+    `${API_BASE_URL}/api/adittya/campaigns`,
+    payload
+  );
+
+  return data;
+};
+
+
 export const saveArtistProfile = async (payload: {
   username: string;
   bio: string;
   genres: string;
   social_links: Record<string, string>;
 }) => {
-  const { data } = await axios.post("http://localhost:3000/api/adittya/profile", payload);
+  const { data } = await axios.post(
+    `${API_BASE_URL}/api/adittya/profile`,
+    payload
+  );
   return data;
 };
 
@@ -174,7 +259,10 @@ export const addArtistWork = async (payload: {
   category: string;
   media_url: string;
 }) => {
-  const { data } = await axios.post("http://localhost:3000/api/adittya/media", payload);
+  const { data } = await axios.post(
+    `${API_BASE_URL}/api/adittya/media`,
+    payload
+  );
   return data;
 };
 
@@ -187,7 +275,10 @@ export const updateArtistWork = async (
     media_url: string;
   }
 ) => {
-  const { data } = await axios.put(`http://localhost:3000/api/adittya/media/${mediaId}`, payload);
+  const { data } = await axios.put(
+    `${API_BASE_URL}/api/adittya/media/${mediaId}`,
+    payload
+  );
   return data;
 };
 
@@ -195,6 +286,9 @@ export const followArtist = async (payload: {
   follower_username: string;
   followed_username: string;
 }) => {
-  const { data } = await axios.post("http://localhost:3000/api/adittya/follow", payload);
+  const { data } = await axios.post(
+    `${API_BASE_URL}/api/adittya/follow`,
+    payload
+  );
   return data;
 };

@@ -5,6 +5,8 @@ export type SponsorListing = {
   focusAreas: string[];
   city: string;
   budgetRange: string;
+  minBudget: number;
+  maxBudget: number;
   description: string;
   preferredArtists: string[];
 };
@@ -17,9 +19,15 @@ export const staticSponsorListings: SponsorListing[] = [
     focusAreas: ["Music", "Classical Performance", "Cultural Events"],
     city: "Dhaka",
     budgetRange: "৳50,000 - ৳200,000",
+    minBudget: 50000,
+    maxBudget: 200000,
     description:
       "Supports cultural preservation projects, live performances, and heritage-focused artist initiatives.",
-    preferredArtists: ["Nazrul Sangeet Artist", "Classical Dancer", "Folk Musician"],
+    preferredArtists: [
+      "Nazrul Sangeet Artist",
+      "Classical Dancer",
+      "Folk Musician",
+    ],
   },
   {
     id: "sp-102",
@@ -28,6 +36,8 @@ export const staticSponsorListings: SponsorListing[] = [
     focusAreas: ["Digital Art", "Online Content", "Youth Creators"],
     city: "Dhaka",
     budgetRange: "৳30,000 - ৳150,000",
+    minBudget: 30000,
+    maxBudget: 150000,
     description:
       "Interested in creator-led visual campaigns, short-form digital content, and youth audience engagement.",
     preferredArtists: ["Digital Creator", "Illustrator", "Visual Storyteller"],
@@ -39,8 +49,14 @@ export const staticSponsorListings: SponsorListing[] = [
     focusAreas: ["Theatre", "Live Performance", "Art Exhibitions"],
     city: "Chattogram",
     budgetRange: "৳40,000 - ৳180,000",
+    minBudget: 40000,
+    maxBudget: 180000,
     description:
       "Provides patron-style support for selected stage performers, exhibition artists, and curated live productions.",
-    preferredArtists: ["Stage Performer", "Exhibition Artist", "Performance Visual Artist"],
+    preferredArtists: [
+      "Stage Performer",
+      "Exhibition Artist",
+      "Performance Visual Artist",
+    ],
   },
 ];
