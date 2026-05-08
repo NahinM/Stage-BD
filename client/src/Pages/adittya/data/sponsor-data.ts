@@ -1,6 +1,7 @@
 export type SponsorListing = {
   id: string;
   sponsorName: string;
+  sponsorUsername: string;
   sponsorType: string;
   focusAreas: string[];
   city: string;
@@ -15,6 +16,7 @@ export const staticSponsorListings: SponsorListing[] = [
   {
     id: "sp-101",
     sponsorName: "Bangla Culture Foundation",
+    sponsorUsername: "bangla_culture_foundation",
     sponsorType: "Cultural Sponsor",
     focusAreas: ["Music", "Classical Performance", "Cultural Events"],
     city: "Dhaka",
@@ -32,6 +34,7 @@ export const staticSponsorListings: SponsorListing[] = [
   {
     id: "sp-102",
     sponsorName: "Creative Youth Media",
+    sponsorUsername: "creative_youth_media",
     sponsorType: "Digital Media Partner",
     focusAreas: ["Digital Art", "Online Content", "Youth Creators"],
     city: "Dhaka",
@@ -45,6 +48,7 @@ export const staticSponsorListings: SponsorListing[] = [
   {
     id: "sp-103",
     sponsorName: "Rupali Events & Patron Circle",
+    sponsorUsername: "rupali_events_patron_circle",
     sponsorType: "Private Patron Group",
     focusAreas: ["Theatre", "Live Performance", "Art Exhibitions"],
     city: "Chattogram",
