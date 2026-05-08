@@ -453,22 +453,26 @@ export const createSponsorshipRequest = async (req, res) => {
     const {
       artist_username,
       requesting_username,
+      sponsor_username,
       sponsor_name,
       message,
       requested_amount,
     } = req.body;
 
-    if (!artist_username || !requesting_username || !sponsor_name || !message) {
+    if (
+      !artist_username ||
+      !requesting_username ||
+      !sponsor_username ||
+      !message
+    ) {
       return res.status(400).json({
         success: false,
         message:
-          "artist_username, requesting_username, sponsor_name, and message are required.",
+          "artist_username, requesting_username, sponsor_username, and message are required.",
       });
     }
 
-    if (
-      artist_username.toLowerCase() !== requesting_username.toLowerCase()
-    ) {
+    if (artist_username.toLowerCase() !== requesting_username.toLowerCase()) {
       return res.status(403).json({
         success: false,
         message: "You can only request sponsorship for your own artist account.",
@@ -481,43 +485,6 @@ export const createSponsorshipRequest = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Requested amount must be greater than 0.",
-      });
-    }
-
-    const sponsorBudgetMap = {
-      "Bangla Culture Foundation": {
-        username: "bangla_culture_foundation",
-        min: 50000,
-        max: 200000,
-      },
-      "Creative Youth Media": {
-        username: "creative_youth_media",
-        min: 30000,
-        max: 150000,
-      },
-      "Rupali Events & Patron Circle": {
-        username: "rupali_events_patron_circle",
-        min: 40000,
-        max: 180000,
-      },
-    };
-
-    const sponsorInfo = sponsorBudgetMap[sponsor_name];
-
-    if (!sponsorInfo) {
-      return res.status(400).json({
-        success: false,
-        message: "Selected sponsor is not recognized.",
-      });
-    }
-
-    if (
-      numericRequestedAmount < sponsorInfo.min ||
-      numericRequestedAmount > sponsorInfo.max
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: `Requested amount must be between ${sponsorInfo.min} and ${sponsorInfo.max}.`,
       });
     }
 
@@ -545,18 +512,47 @@ export const createSponsorshipRequest = async (req, res) => {
       });
     }
 
-    const { data: sponsorUser, error: sponsorError } = await supabase
-      .from("user")
-      .select("id, username")
-      .eq("username", sponsorInfo.username)
-      .maybeSingle();
+    const sponsorStatus = await checkUserHasRole(sponsor_username, "sponsor");
 
-    if (sponsorError) throw sponsorError;
-
-    if (!sponsorUser) {
+    if (!sponsorStatus.user) {
       return res.status(404).json({
         success: false,
         message: "Sponsor user not found in database.",
+      });
+    }
+
+    if (!sponsorStatus.hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Selected user does not have sponsor role.",
+      });
+    }
+
+    const { data: sponsorProfile, error: sponsorProfileError } = await supabase
+      .from("sponsor_profiles")
+      .select("id, sponsor_id, min_budget, max_budget, is_public, sponsor_name")
+      .eq("sponsor_id", sponsorStatus.user.id)
+      .maybeSingle();
+
+    if (sponsorProfileError) throw sponsorProfileError;
+
+    if (!sponsorProfile || sponsorProfile.is_public === false) {
+      return res.status(400).json({
+        success: false,
+        message: "Selected sponsor does not have a public sponsor listing.",
+      });
+    }
+
+    const minBudget = Number(sponsorProfile.min_budget || 0);
+    const maxBudget = Number(sponsorProfile.max_budget || 0);
+
+    if (
+      numericRequestedAmount < minBudget ||
+      numericRequestedAmount > maxBudget
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `Requested amount must be between ${minBudget} and ${maxBudget}.`,
       });
     }
 
@@ -565,9 +561,10 @@ export const createSponsorshipRequest = async (req, res) => {
       .insert([
         {
           artist_id: artistStatus.user.id,
-          sponsor_id: sponsorUser.id,
+          sponsor_id: sponsorStatus.user.id,
           message,
           requested_amount: numericRequestedAmount,
+          status: "pending",
         },
       ])
       .select()
@@ -577,7 +574,9 @@ export const createSponsorshipRequest = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Sponsorship request created successfully.",
+      message: `Sponsorship request sent to ${
+        sponsorProfile.sponsor_name || sponsor_name || sponsor_username
+      } successfully.`,
       data,
     });
   } catch (error) {
@@ -629,6 +628,676 @@ export const getSponsorshipRequestsByArtist = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to load sponsorship requests.",
+      error: error.message,
+    });
+  }
+};
+
+const checkUserHasRole = async (username, roleName) => {
+  const { data: user, error: userError } = await supabase
+    .from("user")
+    .select("id, username, firstname, lastname, city")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (userError) throw userError;
+
+  if (!user) {
+    return {
+      user: null,
+      hasRole: false,
+    };
+  }
+
+  const { data: roleRows, error: roleError } = await supabase
+    .from("user_role")
+    .select("role")
+    .eq("user_id", user.id);
+
+  if (roleError) throw roleError;
+
+  const hasRole = (roleRows || []).some(
+    (row) => String(row.role).toLowerCase() === roleName.toLowerCase()
+  );
+
+  return {
+    user,
+    hasRole,
+  };
+};
+
+export const getSponsorshipRequestsForSponsor = async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: "Sponsor username is required.",
+      });
+    }
+
+    const sponsorStatus = await checkUserHasRole(username, "sponsor");
+
+    if (!sponsorStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsor user not found.",
+      });
+    }
+
+    if (!sponsorStatus.hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Only sponsor users can view incoming sponsorship requests.",
+      });
+    }
+
+    const { data: requests, error } = await supabase
+      .from("sponsorship_request")
+      .select(
+        "id, artist_id, sponsor_id, message, status, requested_amount, created_at"
+      )
+      .eq("sponsor_id", sponsorStatus.user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const artistIds = [
+      ...new Set((requests || []).map((request) => request.artist_id)),
+    ].filter(Boolean);
+
+    let artistMap = new Map();
+
+    if (artistIds.length > 0) {
+      const { data: artists, error: artistError } = await supabase
+        .from("user")
+        .select("id, username, firstname, lastname, city")
+        .in("id", artistIds);
+
+      if (artistError) throw artistError;
+
+      artistMap = new Map((artists || []).map((artist) => [artist.id, artist]));
+    }
+
+    const formatted = (requests || []).map((request) => {
+      const artist = artistMap.get(request.artist_id);
+
+      const artistName =
+        [artist?.firstname, artist?.lastname].filter(Boolean).join(" ").trim() ||
+        artist?.username ||
+        "Unknown Artist";
+
+      return {
+        id: request.id,
+        artist_id: request.artist_id,
+        sponsor_id: request.sponsor_id,
+        artistUsername: artist?.username || "",
+        artistName,
+        artistCity: artist?.city || "",
+        sponsorUsername: sponsorStatus.user.username,
+        message: request.message,
+        status: request.status || "pending",
+        requested_amount: request.requested_amount,
+        created_at: request.created_at,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: formatted,
+    });
+  } catch (error) {
+    console.error("getSponsorshipRequestsForSponsor error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load sponsor requests.",
+      error: error.message,
+    });
+  }
+};
+
+const formatSponsorProfile = (profile, user) => {
+  const minBudget = Number(profile.min_budget || 0);
+  const maxBudget = Number(profile.max_budget || 0);
+
+  return {
+    id: profile.id,
+    sponsorId: profile.sponsor_id,
+    sponsorUsername: user?.username || "",
+    sponsorName: profile.sponsor_name || user?.username || "Sponsor",
+    sponsorType: profile.sponsor_type || "Sponsor",
+    focusAreas: profile.focus_areas || [],
+    city: profile.city || user?.city || "Bangladesh",
+    minBudget,
+    maxBudget,
+    budgetRange:
+      minBudget && maxBudget
+        ? `৳${minBudget.toLocaleString()} - ৳${maxBudget.toLocaleString()}`
+        : "Budget not specified",
+    description: profile.description || "",
+    preferredArtists: profile.preferred_artists || [],
+    isPublic: profile.is_public !== false,
+    created_at: profile.created_at,
+    updated_at: profile.updated_at,
+  };
+};
+
+export const getPublicSponsorProfiles = async (req, res) => {
+  try {
+    const { data: profiles, error: profileError } = await supabase
+      .from("sponsor_profiles")
+      .select(
+        "id, sponsor_id, sponsor_name, sponsor_type, focus_areas, city, min_budget, max_budget, description, preferred_artists, is_public, created_at, updated_at"
+      )
+      .eq("is_public", true)
+      .order("created_at", { ascending: false });
+
+    if (profileError) throw profileError;
+
+    const sponsorIds = [
+      ...new Set((profiles || []).map((profile) => profile.sponsor_id)),
+    ].filter(Boolean);
+
+    let userMap = new Map();
+
+    if (sponsorIds.length > 0) {
+      const { data: users, error: userError } = await supabase
+        .from("user")
+        .select("id, username, firstname, lastname, city")
+        .in("id", sponsorIds);
+
+      if (userError) throw userError;
+
+      userMap = new Map((users || []).map((user) => [user.id, user]));
+    }
+
+    const formatted = (profiles || []).map((profile) =>
+      formatSponsorProfile(profile, userMap.get(profile.sponsor_id))
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: formatted,
+    });
+  } catch (error) {
+    console.error("getPublicSponsorProfiles error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load public sponsor profiles.",
+      error: error.message,
+    });
+  }
+};
+
+export const getMySponsorProfile = async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: "Sponsor username is required.",
+      });
+    }
+
+    const sponsorStatus = await checkUserHasRole(username, "sponsor");
+
+    if (!sponsorStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsor user not found.",
+      });
+    }
+
+    if (!sponsorStatus.hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Only sponsor users can view sponsor profile settings.",
+      });
+    }
+
+    const { data: profile, error } = await supabase
+      .from("sponsor_profiles")
+      .select(
+        "id, sponsor_id, sponsor_name, sponsor_type, focus_areas, city, min_budget, max_budget, description, preferred_artists, is_public, created_at, updated_at"
+      )
+      .eq("sponsor_id", sponsorStatus.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      data: profile ? formatSponsorProfile(profile, sponsorStatus.user) : null,
+    });
+  } catch (error) {
+    console.error("getMySponsorProfile error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load sponsor profile.",
+      error: error.message,
+    });
+  }
+};
+
+export const upsertMySponsorProfile = async (req, res) => {
+  try {
+    const {
+      sponsor_username,
+      sponsor_name,
+      sponsor_type,
+      focus_areas,
+      city,
+      min_budget,
+      max_budget,
+      description,
+      preferred_artists,
+      is_public,
+    } = req.body;
+
+    if (!sponsor_username || !sponsor_name || !description) {
+      return res.status(400).json({
+        success: false,
+        message: "sponsor_username, sponsor_name, and description are required.",
+      });
+    }
+
+    const minBudget = Number(min_budget);
+    const maxBudget = Number(max_budget);
+
+    if (!minBudget || !maxBudget || minBudget <= 0 || maxBudget <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid min_budget and max_budget are required.",
+      });
+    }
+
+    if (minBudget > maxBudget) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum budget cannot be greater than maximum budget.",
+      });
+    }
+
+    const sponsorStatus = await checkUserHasRole(sponsor_username, "sponsor");
+
+    if (!sponsorStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsor user not found.",
+      });
+    }
+
+    if (!sponsorStatus.hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Only sponsor users can create or update sponsor listings.",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("sponsor_profiles")
+      .upsert(
+        [
+          {
+            sponsor_id: sponsorStatus.user.id,
+            sponsor_name,
+            sponsor_type: sponsor_type || "Sponsor",
+            focus_areas: Array.isArray(focus_areas) ? focus_areas : [],
+            city: city || sponsorStatus.user.city || "Bangladesh",
+            min_budget: minBudget,
+            max_budget: maxBudget,
+            description,
+            preferred_artists: Array.isArray(preferred_artists)
+              ? preferred_artists
+              : [],
+            is_public: is_public !== false,
+            updated_at: new Date().toISOString(),
+          },
+        ],
+        { onConflict: "sponsor_id" }
+      )
+      .select(
+        "id, sponsor_id, sponsor_name, sponsor_type, focus_areas, city, min_budget, max_budget, description, preferred_artists, is_public, created_at, updated_at"
+      )
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: "Sponsor listing saved successfully.",
+      data: formatSponsorProfile(data, sponsorStatus.user),
+    });
+  } catch (error) {
+    console.error("upsertMySponsorProfile error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save sponsor profile.",
+      error: error.message,
+    });
+  }
+};
+
+export const updateSponsorshipRequestStatus = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { sponsor_username, status } = req.body;
+
+    if (!requestId || !sponsor_username || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "requestId, sponsor_username, and status are required.",
+      });
+    }
+
+    const normalizedStatus = String(status).toLowerCase();
+    const allowedStatuses = ["pending", "approved", "rejected", "offered"];
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be pending, approved, or rejected.",
+      });
+    }
+
+    const sponsorStatus = await checkUserHasRole(sponsor_username, "sponsor");
+
+    if (!sponsorStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsor user not found.",
+      });
+    }
+
+    if (!sponsorStatus.hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Only sponsor users can update sponsorship request status.",
+      });
+    }
+
+    const { data: request, error: requestError } = await supabase
+      .from("sponsorship_request")
+      .select("id, sponsor_id")
+      .eq("id", requestId)
+      .maybeSingle();
+
+    if (requestError) throw requestError;
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsorship request not found.",
+      });
+    }
+
+    if (request.sponsor_id !== sponsorStatus.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only manage requests sent to your sponsor account.",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("sponsorship_request")
+      .update({ status: normalizedStatus })
+      .eq("id", requestId)
+      .eq("sponsor_id", sponsorStatus.user.id)
+      .select(
+        "id, artist_id, sponsor_id, message, status, requested_amount, created_at"
+      )
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: "Sponsorship request status updated successfully.",
+      data,
+    });
+  } catch (error) {
+    console.error("updateSponsorshipRequestStatus error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update sponsorship request status.",
+      error: error.message,
+    });
+  }
+};
+
+export const getAvailableArtistsForSponsor = async (req, res) => {
+  try {
+    const { sponsorUsername } = req.params;
+
+    if (!sponsorUsername) {
+      return res.status(400).json({
+        success: false,
+        message: "Sponsor username is required.",
+      });
+    }
+
+    const sponsorStatus = await checkUserHasRole(sponsorUsername, "sponsor");
+
+    if (!sponsorStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsor user not found.",
+      });
+    }
+
+    if (!sponsorStatus.hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Only sponsor users can browse artists for sponsorship offers.",
+      });
+    }
+
+    const artists = await listArtists();
+
+    return res.status(200).json({
+      success: true,
+      data: artists || [],
+    });
+  } catch (error) {
+    console.error("getAvailableArtistsForSponsor error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load artists for sponsor.",
+      error: error.message,
+    });
+  }
+};
+
+export const createSponsorOffer = async (req, res) => {
+  try {
+    const {
+      sponsor_username,
+      artist_username,
+      message,
+      offered_amount,
+    } = req.body;
+
+    if (!sponsor_username || !artist_username || !message || !offered_amount) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "sponsor_username, artist_username, message, and offered_amount are required.",
+      });
+    }
+
+    const numericAmount = Number(offered_amount);
+
+    if (!numericAmount || numericAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Offered amount must be greater than 0.",
+      });
+    }
+
+    const sponsorStatus = await checkUserHasRole(sponsor_username, "sponsor");
+
+    if (!sponsorStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsor user not found.",
+      });
+    }
+
+    if (!sponsorStatus.hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Only sponsor users can create sponsorship offers.",
+      });
+    }
+
+    const artistStatus = await checkUserArtistRoleAndProfile(artist_username);
+
+    if (!artistStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Artist user not found.",
+      });
+    }
+
+    if (!artistStatus.isArtist) {
+      return res.status(403).json({
+        success: false,
+        message: "Selected user does not have artist role.",
+      });
+    }
+
+    if (!artistStatus.hasArtistProfile) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Selected artist must have an artist portfolio before receiving sponsorship offers.",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("sponsorship_request")
+      .insert([
+        {
+          artist_id: artistStatus.user.id,
+          sponsor_id: sponsorStatus.user.id,
+          message,
+          requested_amount: numericAmount,
+          status: "offered",
+        },
+      ])
+      .select(
+        "id, artist_id, sponsor_id, message, status, requested_amount, created_at"
+      )
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json({
+      success: true,
+      message: "Sponsorship offer sent successfully.",
+      data,
+    });
+  } catch (error) {
+    console.error("createSponsorOffer error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create sponsorship offer.",
+      error: error.message,
+    });
+  }
+};
+
+export const updateSponsorOfferByArtist = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { artist_username, status } = req.body;
+
+    if (!requestId || !artist_username || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "requestId, artist_username, and status are required.",
+      });
+    }
+
+    const normalizedStatus = String(status).toLowerCase();
+    const allowedStatuses = ["accepted", "rejected"];
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be accepted or rejected.",
+      });
+    }
+
+    const artistStatus = await checkUserArtistRoleAndProfile(artist_username);
+
+    if (!artistStatus.user) {
+      return res.status(404).json({
+        success: false,
+        message: "Artist user not found.",
+      });
+    }
+
+    if (!artistStatus.isArtist) {
+      return res.status(403).json({
+        success: false,
+        message: "Only artist users can respond to sponsor offers.",
+      });
+    }
+
+    const { data: request, error: requestError } = await supabase
+      .from("sponsorship_request")
+      .select("id, artist_id, status")
+      .eq("id", requestId)
+      .maybeSingle();
+
+    if (requestError) throw requestError;
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Sponsorship offer not found.",
+      });
+    }
+
+    if (request.artist_id !== artistStatus.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only respond to offers sent to your artist account.",
+      });
+    }
+
+    if (String(request.status).toLowerCase() !== "offered") {
+      return res.status(400).json({
+        success: false,
+        message: "Only offered sponsorships can be accepted or rejected.",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("sponsorship_request")
+      .update({ status: normalizedStatus })
+      .eq("id", requestId)
+      .eq("artist_id", artistStatus.user.id)
+      .select(
+        "id, artist_id, sponsor_id, message, status, requested_amount, created_at"
+      )
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      message: "Sponsor offer response saved successfully.",
+      data,
+    });
+  } catch (error) {
+    console.error("updateSponsorOfferByArtist error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to respond to sponsor offer.",
       error: error.message,
     });
   }
