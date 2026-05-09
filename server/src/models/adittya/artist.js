@@ -1,50 +1,15 @@
-import { supabase } from "../../config/database.js";
+import {
+  supabase,
+  defaultImage,
+  showcaseCategories,
+  makeError,
+  resolvePreviewImage,
+  buildArtistTagline,
+  buildWorkDescription,
+  checkUserArtistRoleAndProfile,
+} from "./_utils.js";
 
-const defaultImage =
-  "https://picsum.photos/seed/stagebd-default/900/700";
-
-const youtubeThumb = (url) => {
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtube.com")) {
-      const v = u.searchParams.get("v");
-      return v ? `https://i.ytimg.com/vi/${v}/hqdefault.jpg` : null;
-    }
-    if (u.hostname.includes("youtu.be")) {
-      const v = u.pathname.replace("/", "");
-      return v ? `https://i.ytimg.com/vi/${v}/hqdefault.jpg` : null;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-};
-
-const resolvePreviewImage = (mediaUrl) => {
-  if (!mediaUrl) return defaultImage;
-  if (
-    mediaUrl.includes("i.ytimg.com") ||
-    mediaUrl.match(/\.(jpg|jpeg|png|webp|gif)$/i) ||
-    mediaUrl.includes("picsum.photos")
-  ) {
-    return mediaUrl;
-  }
-  return youtubeThumb(mediaUrl) || defaultImage;
-};
-
-const buildArtistTagline = (genres) => {
-  if (!genres) return "StageBD Artist";
-  return genres
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 2)
-    .join(", ");
-};
-
-const buildWorkDescription = (category, artistName) => {
-  return `${category || "Creative"} work by ${artistName}.`;
-};
+export { checkUserArtistRoleAndProfile };
 
 export const listArtists = async () => {
   const { data: profiles, error: profileError } = await supabase
@@ -55,6 +20,7 @@ export const listArtists = async () => {
   if (profileError) throw profileError;
 
   const usernames = (profiles || []).map((p) => p.username);
+
   if (usernames.length === 0) return [];
 
   const { data: users, error: userError } = await supabase
@@ -68,7 +34,10 @@ export const listArtists = async () => {
 
   return (profiles || []).map((profile) => {
     const user = userMap.get(profile.username);
-    const fullName = [user?.firstname, user?.lastname].filter(Boolean).join(" ").trim();
+    const fullName = [user?.firstname, user?.lastname]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
 
     return {
       id: profile.username,
@@ -112,7 +81,10 @@ export const getArtistByUsername = async (username) => {
 
   if (!profile && !user) return null;
 
-  const fullName = [user?.firstname, user?.lastname].filter(Boolean).join(" ").trim();
+  const fullName = [user?.firstname, user?.lastname]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
   return {
     id: username,
@@ -133,71 +105,116 @@ export const getArtistByUsername = async (username) => {
       description: buildWorkDescription(work.category, fullName || username),
       link: work.media_url,
       image: resolvePreviewImage(work.media_url),
-      showcase: ["Illustration", "Digital Art", "Poster", "Digital Media", "Performance Visual", "Brand Design"].includes(work.category || ""),
+      showcase: showcaseCategories.includes(work.category || ""),
     })),
   };
 };
 
-export const listShowcaseItems = async () => {
-  const { data: mediaRows, error: mediaError } = await supabase
-    .from("artist_media")
-    .select("media_id, username, title, category, media_url, created_at")
-    .order("created_at", { ascending: false });
+export const createArtistProfileRecord = async ({
+  username,
+  bio,
+  genres,
+  social_links,
+}) => {
+  const status = await checkUserArtistRoleAndProfile(username);
 
-  if (mediaError) throw mediaError;
+  if (!status.user) throw makeError("User not found.", 404);
 
-  const allowed = new Set([
-    "Illustration",
-    "Digital Art",
-    "Poster",
-    "Digital Media",
-    "Performance Visual",
-    "Brand Design",
-  ]);
+  if (!status.isArtist) {
+    throw makeError("Only users with artist role can create an artist portfolio.", 403);
+  }
 
-  const filtered = (mediaRows || []).filter((m) => allowed.has(m.category || ""));
-  const usernames = [...new Set(filtered.map((m) => m.username))];
+  if (status.hasArtistProfile) {
+    throw makeError("Artist portfolio already exists for this user.", 409);
+  }
 
-  const { data: users, error: userError } = await supabase
-    .from("user")
-    .select("username, firstname, lastname, city")
-    .in("username", usernames);
+  const fullName = [status.user.firstname, status.user.lastname]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
-  if (userError) throw userError;
-
-  const userMap = new Map((users || []).map((u) => [u.username, u]));
-
-  return filtered.map((work) => {
-    const user = userMap.get(work.username);
-    const artistName =
-      [user?.firstname, user?.lastname].filter(Boolean).join(" ").trim() || work.username;
-
-    return {
-      id: work.media_id,
-      title: work.title,
-      type: work.category || "Media",
-      category: work.category || "Media",
-      description: buildWorkDescription(work.category, artistName),
-      link: work.media_url,
-      image: resolvePreviewImage(work.media_url),
-      artistId: work.username,
-      artistName,
-      artistCity: user?.city || "Bangladesh",
-    };
-  });
-};
-
-export const upsertArtistProfile = async ({ username, bio, genres, social_links }) => {
   const { data, error } = await supabase
     .from("artist_profiles")
-    .upsert(
-      [{ username, bio, genres, social_links }],
-      { onConflict: "username" }
-    )
+    .insert([
+      {
+        username,
+        bio:
+          bio ||
+          status.user.bio ||
+          `${fullName || username} is an artist on StageBD.`,
+        genres: genres || "",
+        social_links: social_links || {},
+      },
+    ])
     .select()
     .single();
 
   if (error) throw error;
+
+  return data;
+};
+
+export const updateArtistProfileRecord = async ({
+  username,
+  bio,
+  genres,
+  social_links,
+}) => {
+  const status = await checkUserArtistRoleAndProfile(username);
+
+  if (!status.user) throw makeError("User not found.", 404);
+
+  if (!status.isArtist) {
+    throw makeError("Only artist users can update artist portfolios.", 403);
+  }
+
+  if (!status.hasArtistProfile) {
+    throw makeError("Artist portfolio does not exist yet. Create it first.", 404);
+  }
+
+  const { data, error } = await supabase
+    .from("artist_profiles")
+    .update({
+      bio,
+      genres,
+      social_links,
+    })
+    .eq("username", username)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+};
+
+export const updateArtistCoverImageRecord = async ({
+  username,
+  requesting_username,
+  avatar_url,
+}) => {
+  if (username.toLowerCase() !== requesting_username.toLowerCase()) {
+    throw makeError("You can only update your own cover picture.", 403);
+  }
+
+  const { data: user, error: userError } = await supabase
+    .from("user")
+    .select("id, username")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (userError) throw userError;
+  if (!user) throw makeError("User not found.", 404);
+
+  const { data, error } = await supabase
+    .from("user")
+    .update({ avatar_url })
+    .eq("username", username)
+    .select("id, username, avatar_url")
+    .single();
+
+  if (error) throw error;
+
   return data;
 };
 
@@ -209,10 +226,17 @@ export const addArtistMedia = async ({ username, title, category, media_url }) =
     .single();
 
   if (error) throw error;
+
   return data;
 };
 
-export const updateArtistMedia = async ({ media_id, username, title, category, media_url }) => {
+export const updateArtistMedia = async ({
+  media_id,
+  username,
+  title,
+  category,
+  media_url,
+}) => {
   const { data, error } = await supabase
     .from("artist_media")
     .update({ title, category, media_url })
@@ -222,6 +246,7 @@ export const updateArtistMedia = async ({ media_id, username, title, category, m
     .single();
 
   if (error) throw error;
+
   return data;
 };
 
@@ -234,7 +259,13 @@ export const followArtist = async ({ follower_username, followed_username }) => 
     .maybeSingle();
 
   if (existingError) throw existingError;
-  if (existing) return { alreadyFollowed: true };
+
+  if (existing) {
+    return {
+      alreadyFollowed: true,
+      data: existing,
+    };
+  }
 
   const { data, error } = await supabase
     .from("followers")
@@ -243,6 +274,9 @@ export const followArtist = async ({ follower_username, followed_username }) => 
     .single();
 
   if (error) throw error;
-  return { alreadyFollowed: false, data };
-};
 
+  return {
+    alreadyFollowed: false,
+    data,
+  };
+};
